@@ -43,10 +43,7 @@ IntelliQuiz is AI powered MCQ based Quiz generation platform from user provided 
 5. **Set Up Environment Variables:**
    Create a `.env` file and add the required API keys for Firebase and Google Generative AI API.
 
-6. **Run the Application:**
-   ```sh
-   npm start
-   ```
+
 
 ## 🏗 Future Enhancements
 - 🎭 More engaging quiz formats.
