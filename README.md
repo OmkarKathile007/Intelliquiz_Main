@@ -32,11 +32,13 @@ IntelliQuiz is AI powered MCQ based Quiz generation platform from user provided 
 3. **For Frontend:**
    ```sh
     cd Frontend
+    npm run dev
    ```
    
 4. **For Backend:**
    ```sh
     cd Backend
+    node Server.js
    ```
 5. **Set Up Environment Variables:**
    Create a `.env` file and add the required API keys for Firebase and Google Generative AI API.
