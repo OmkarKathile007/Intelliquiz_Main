@@ -2,7 +2,7 @@
 
 ## 🚀 Elevate Your Learning with AI-Driven Quiz App
 
-IntelliQuiz is an innovative application designed to generate quizzes automatically based on user-provided text input. Leveraging AI, IntelliQuiz simplifies quiz creation for educators, students, and enthusiasts by generating questions dynamically and offering features like multiplayer quiz modes and preparation quizzes for internships or campus placements.
+IntelliQuiz is AI powered MCQ based Quiz generation platform from user provided content (paragraph,or any information).Leveraging AI, IntelliQuiz simplifies quiz creation for educators, students, and enthusiasts by generating questions dynamically and offering features like multiplayer quiz modes and preparation quizzes for internships or campus placements.
 
 ## ✨ Features
 - 🔹 **AI-Based Quiz Generation** – Generate quizzes instantly from any text input.
@@ -20,16 +20,28 @@ IntelliQuiz is an innovative application designed to generate quizzes automatica
 1. **Clone the Repository:**
    ```sh
    git clone https://github.com/yourusername/IntelliQuiz.git
-   cd IntelliQuiz
+   cd IntelliQuiz_Main/App
    ```
+
 2. **Install Dependencies:**
    ```sh
-   npm install
+   npm i
    ```
-3. **Set Up Environment Variables:**
+
+
+3. **For Frontend:**
+   ```sh
+    cd Frontend
+   ```
+   
+4. **For Backend:**
+   ```sh
+    cd Backend
+   ```
+5. **Set Up Environment Variables:**
    Create a `.env` file and add the required API keys for Firebase and Google Generative AI API.
 
-4. **Run the Application:**
+6. **Run the Application:**
    ```sh
    npm start
    ```
@@ -44,4 +56,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 
 ## 📬 Contact
-For queries or suggestions, reach out at [your email/contact info].
+For queries or suggestions, reach out at [omkarkathuile3@gmail.com].
