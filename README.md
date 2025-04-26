@@ -10,7 +10,7 @@ IntelliQuiz is AI powered MCQ based Quiz generation platform from user provided 
 - 🎯 **Prepare for Campus Placement** – Tailored quizzes to enhance interview readiness.
 
 ## 🛠 Tech Stack
-- **Frontend:** JavaScript, React, Tailwind CSS, TypeScript
+- **Frontend:**  React, Tailwind CSS, TypeScript
 - **Backend:** Node.js with Express.js
 - **Database:** Firebase Realtime Database
 - **Authentication:** Firebase Authentication
@@ -19,7 +19,7 @@ IntelliQuiz is AI powered MCQ based Quiz generation platform from user provided 
 ## 📌 Installation & Setup
 1. **Clone the Repository:**
    ```sh
-   git clone https://github.com/yourusername/IntelliQuiz.git
+   git clone https://github.com/OmkarKathile007/Intelliquiz_Main.git
    cd IntelliQuiz_Main/App
    ```
 
@@ -55,4 +55,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 
 ## 📬 Contact
-For queries or suggestions, reach out at [omkarkathuile3@gmail.com].
+For queries or suggestions, reach out at [omkarkathile3@gmail.com].
