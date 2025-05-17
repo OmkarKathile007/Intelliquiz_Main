@@ -13,6 +13,8 @@ import OA from "./Tabs/MCQTest/CardsQuiz/OA"
 // import Aboutus from "./component/Contact/Contact"
 import Contact from "./component/Contact/Contact"
 import ProtectedRoute from '../utils/ProtectedRoutes'
+import Dashboard from "./Tabs/DashBoard/Dashboard"
+// import DashBoard from "./Tabs/DashBoard/DashBoard"
 
 function App() {
   // const Location=useLocation();
@@ -32,6 +34,7 @@ function App() {
                <Route path="/aiquiz" element={<AIQuiz/>}/>
                <Route path="/multiplayer" element={<MultiplayerQuiz/>} />
                <Route path="/mcqtest" element={<MCQTest/> } />
+               <Route path="/dashboard" element={<Dashboard playerId={1}  /> } />
                    
                
                <Route path="mcqtest/CS_fundamentals" element={<CSfundamentals/>} />

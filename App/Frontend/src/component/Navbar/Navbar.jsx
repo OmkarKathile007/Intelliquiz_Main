@@ -231,6 +231,9 @@ const Navbar = () => {
             <li className="hover:text-sky-400 transition-colors">
               <Link to="/contact" className="px-3 py-2 text-base lg:text-lg">Contact Us</Link>
             </li>
+            <li className="hover:text-sky-400 transition-colors">
+              <Link to="/dashboard" className="px-3 py-2 text-base lg:text-lg">Dashboard</Link>
+            </li>
             
             {firebase.isLoggedIn ? (
               <li>

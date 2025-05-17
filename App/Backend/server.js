@@ -2,6 +2,8 @@ const express = require('express');
 const http = require('http');
 const socketio = require('socket.io');
 const cors = require('cors');
+ const Stats = require('./models/Stats.js')
+ const connectDB = require('./config/db')
 // const questions = require('./quizes/quiz.js');
 
 const app = express();
@@ -9,6 +11,10 @@ const server = http.createServer(app);
 
 
 app.use(cors());
+ connectDB();
+
+
+// const PORT =process.env.PORT|| 5000;
 
 const io = socketio(server, {
     cors: {
@@ -20,6 +26,16 @@ const io = socketio(server, {
       credentials: true
     }
 });
+app.get('/dashboard/api/stats/:playerId', async (req, res) => {
+   try {
+     const stats = await Stats.findOne({ player: req.params.playerId });
+     console.log(stats);
+     if (!stats) return res.status(404).json({ msg: 'Stats not found' });
+     res.json(stats);
+   } catch (err) {
+     res.status(500).send('Server Error');
+   }
+ });
 
 const PORT =process.env.PORT|| 5000;
 

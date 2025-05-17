@@ -23,7 +23,7 @@ const firebaseConfig = {
 
 export const useFirebase=()=>useContext(FirebaseContext);
 export const firebaseapp=initializeApp(firebaseConfig)
-export const firebaseAuth=getAuth(firebaseapp);
+const firebaseAuth=getAuth(firebaseapp);
 
 const GoogleProvider=new GoogleAuthProvider();
 
