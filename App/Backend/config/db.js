@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv')
 const Stats = require('../models/Stats.js');
-//load env
 dotenv.config()
 const MONGO_URI = process.env.MONGODB_URI;
 
@@ -26,24 +25,21 @@ const connectDB = async () => {
   }
 }
 
-// quick-fetch.js
-//const mongoose = require('mongoose');
 
-// 1. Replace with your actual Atlas URI:
-//const MONGODB_URI = ;
+//const MONGODB_URI = process.env.MONGO_URI;
 
-// 2. Require your model so it's registered with Mongoose
+
 // require('./models/Stats');  
 // const Stats = mongoose.model('Stats');
 
 // (async () => {
 //   try {
-//     // 3. Connect
+//
 //     await mongoose.connect(MONGO_URI, {
 //       useNewUrlParser: true,
 //       useUnifiedTopology: true,
 //     });
-//     console.log('✅ Connected to MongoDB Atlas');
+//     console.log('Connected to MongoDB Atlas');
 
 //     // 4. Fetch & log
 //     const allStats = await Stats.find();       // fetch all
@@ -53,7 +49,7 @@ const connectDB = async () => {
 //     await mongoose.disconnect();
 //     process.exit(0);
 //   } catch (err) {
-//     console.error('❌ Error:', err);
+//     console.error(' Error:', err);
 //     process.exit(1);
 //   }
 // })();
