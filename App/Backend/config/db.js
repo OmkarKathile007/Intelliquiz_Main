@@ -30,7 +30,7 @@ const connectDB = async () => {
 //const mongoose = require('mongoose');
 
 // 1. Replace with your actual Atlas URI:
-//const MONGODB_URI = 'mongodb+srv://omkarkathile420:Intelliquiz_main@cluster0.dplnxlg.mongodb.net/dashboard';
+//const MONGODB_URI = ;
 
 // 2. Require your model so it's registered with Mongoose
 // require('./models/Stats');  
