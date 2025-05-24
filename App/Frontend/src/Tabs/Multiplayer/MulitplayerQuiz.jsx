@@ -125,7 +125,7 @@ function MultiplayerQuiz() {
 
   return (
     
-    <div className="bg-black min-h-screen w-full text-white flex flex-col justify-center items-center p-4">
+    <div className="bg-black min-h-screen w-full text-white flex justify-evenly  items-center p-4">
   {!info ? (
     <div className="bg-neutral-900 border border-pink-200 bg-opacity-70 backdrop-blur-lg rounded-lg w-full max-w-lg md:max-w-screen-lg p-6 md:p-20 mt-10 shadow-lg flex flex-col gap-4">
       <h1 className="text-center text-xl md:text-2xl font-bold">Join Our Exciting</h1>
@@ -183,25 +183,28 @@ function MultiplayerQuiz() {
               </li>
             ))}
           </ul>
-          <div className="mt-4 border border-gray-300">
-            {scores.map((player, index) => (
-              <p key={index} className="text-center font-semibold bg-gray-300 text-black p-2 border-b">
-                {index + 1}. {player.name}:{" "}
-                {player.score >= 0 ? (
-                  <span className="text-green-500">{player.score}</span>
-                ) : (
-                  <span className="text-red-500">{player.score}</span>
-                )}
-              </p>
-            ))}
-          </div>
+          
         </div>
       ) : (
         <p className="text-center">Loading question...</p>
       )}
     </div>
+
   )}
+  <div className=" border border-gray-300 w-1/3 h-1/3 ">
+            {scores.map((player, index) => (
+              <p key={index} className="text-center font-semibold w-full flex items-center justify-center bg-blue-200  text-black p-4 border-b">
+                {index + 1}. {player.name}:{" "}
+                {player.score >= 0 ? (
+                  <p className="text-green-500">{player.score}</p>
+                ) : (
+                  <p className="text-red-500">{player.score}</p>
+                )}
+              </p>
+            ))}
+          </div>
 </div>
+
 
     
   );

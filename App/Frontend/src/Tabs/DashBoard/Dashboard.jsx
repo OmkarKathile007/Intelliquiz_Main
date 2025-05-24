@@ -18,7 +18,7 @@ const COLORS = ['#3b82f6', '#1e3a8a'];
  * @param {Object} props
  * @param {Number} props.playerId - The ID of the player whose statistics to display.
  */
-export default function DashBoard({ playerId }) {
+export default function Dashboard({ playerId }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

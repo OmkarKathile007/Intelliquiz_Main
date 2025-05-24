@@ -317,7 +317,7 @@ const Home = () => {
         <div className="w-full min-h-screen bg-black flex flex-col lg:flex-row text-white px-4 sm:px-6 lg:px-8">
           <div className="w-full mt-12 lg:mt-24 flex flex-col-reverse lg:flex-row justify-between items-center">
             <div className="lg:ml-16 xl:ml-32 lg:w-1/2 flex flex-col items-center lg:items-start gap-4 sm:gap-6">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-10xl xl:text-7xl font-bold text-blue-300 mt-6 lg:mt-40 animate-fade-move text-center lg:text-left">
+              <h2 className="text-7xl border-2 sm:text-4xl md:text-4xl lg:text-10xl xl:text-7xl font-bold text-blue-300 mt-6 lg:mt-40 animate-fade-move text-center lg:text-left">
                 AI Driven Quiz
               </h2>
               <p className="mt-4 sm:mt-6 text-sm sm:text-base md:text-lg lg:text-xl font-raleway animate-fade-in text-center lg:text-left max-w-lg lg:max-w-none">
