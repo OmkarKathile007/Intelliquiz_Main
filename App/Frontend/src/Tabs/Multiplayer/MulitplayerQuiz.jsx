@@ -188,10 +188,7 @@ function MultiplayerQuiz() {
       ) : (
         <p className="text-center">Loading question...</p>
       )}
-    </div>
-
-  )}
-  <div className=" border border-gray-300 w-1/3 h-1/3 ">
+       <div className=" border border-gray-300 w-full h-1/3 ">
             {scores.map((player, index) => (
               <p key={index} className="text-center font-semibold w-full flex items-center justify-center bg-blue-200  text-black p-4 border-b">
                 {index + 1}. {player.name}:{" "}
@@ -203,6 +200,10 @@ function MultiplayerQuiz() {
               </p>
             ))}
           </div>
+    </div>
+
+  )}
+ 
 </div>
 
 
