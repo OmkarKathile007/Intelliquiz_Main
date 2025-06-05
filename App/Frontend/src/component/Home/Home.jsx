@@ -323,7 +323,7 @@ const Home = () => {
               <p className="mt-4 sm:mt-6 text-sm sm:text-base md:text-lg lg:text-xl font-raleway animate-fade-in text-center lg:text-left max-w-lg lg:max-w-none">
                 Elevate your learning with AI-driven quizzes and multiplayer online modes, designed to make studying smarter and more engaging for students.
               </p>
-              <div className="flex justify-center lg:justify-start mt-6 align-middle sm:mt-8 lg:mt-16 xl:mt-28">
+              <div className="flex justify-center lg:justify-start  align-middle sm:mt-8  ">
                 <button
                   onClick={handleClick}
                   className="bg-blue-700 font-semibold py-2 px-6 sm:py-3 sm:px-8 md:py-3 md:px-10 rounded-md shadow-lg transition-transform transform hover:scale-105 text-sm sm:text-base"
