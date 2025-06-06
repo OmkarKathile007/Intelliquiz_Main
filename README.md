@@ -2,7 +2,7 @@
 ### Elevate your learning with AI-driven quizzes and multiplayer online modes, designed to make studying smarter and more engaging for students.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?logo=vercel)](https://intelliquiz-main-4v98.vercel.app)  
-[![GitHub Repository](https://img.shields.io/badge/GitHub-Repo-black?logo=github)](https://github.com/your-username/IntelliQuiz)
+
 ![Landing Page](App/Frontend/src/assets/platform.png)
 ![Main Page](App/Frontend/src/assets/maintab.png)
 ---
