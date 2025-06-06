@@ -206,7 +206,7 @@ const Navbar = () => {
   const firebase = useFirebase();
 
   return (
-    <nav className="fixed w-full bg-gray-900 shadow-lg shadow-slate-700 z-50 text-white">
+    <nav className="fixed w-full bg-gray-900 border-b border-b-gray-400 shadow-lg shadow-slate-700 z-50 text-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14 sm:h-16 md:h-20">
           {/* Logo Section */}
