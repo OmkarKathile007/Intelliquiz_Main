@@ -42,15 +42,15 @@ Whether you're preparing for campus placements, building adaptive learning modul
 
 - **Firebase Authentication & User Management**  
   - Secure email/password and OAuth sign-in flows.  
-  - Role-based access controls for Students, Teachers, and Administrators.  
++
 
 - **Time-Based Practice Quizzes**  
   - Pre-built quizzes covering core Computer Science fundamentals, Campus Placement topics, and Online Assessment modules.  
   - Timed, simulated exam environment to help users practice under real test conditions.  
 
 - **Interactive Dashboard & Analytics**  
-  - User-friendly dashboard to view past quiz attempts, scores, and progress charts.  
-  - Administrators can monitor overall usage metrics and question performance.  
+  - User-friendly dashboard to view past quiz attempts, scores.  
+  
 
 ---
 
