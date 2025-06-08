@@ -1,17 +1,15 @@
-// import React, { useState } from 'react';
-// import axios from 'axios';
+// import React, { useState } from 'react'
+// import axios from 'axios'
 // import SpinnerLoad from './SpinnerLoad';
-// // const {
-// //   GoogleGenerativeAI,
-// //   HarmCategory,
-// //   HarmBlockThreshold,
-// // } = require("@google/generative-ai");
-
+//  const {
+//    GoogleGenerativeAI,
+//    HarmCategory,
+//    HarmBlockThreshold,
+//  } = require("@google/generative-ai") 
 // import {GoogleGenerativeAI,HarmCategory,  HarmBlockThreshold} from "@google/generative-ai";
 
-// // const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-
-// const API_KEY="AIzaSyDVOcvSOnlIpKeu9bF7oBZpPByHSrt9vnM";
+//  const API_KEY = import.meta.env.VITE_GEMINI_API_KE 
+// //  const API_KEY="AIzaSyDVOcvSOnlIpKeu9bF7oBZpPByHSrt9vnM";
 
 // const GenAI = () => {
 //   const [question, setQuestion] = useState("");
@@ -41,19 +39,19 @@
 //     setLoader(true);
 //     setAnswer("loading");
 
-//     // const response = await axios({
-//     //   url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
-//     //   method: "post",
-//     //   data: {
-//     //     contents: [
-//     //       {
-//     //         parts: [{
-//     //           text: `Generate a ten-question quiz in MCQ format about the following topic: ${question}. Ensure each question includes multiple choices and is related to the context and dont give answer at last`
-//     //         }]
-//     //       },
-//     //     ]
-//     //   }
-//     // });
+//     const response = await axios({
+//       url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
+//       method: "post",
+//       data: {
+//         contents: [
+//           {
+//             parts: [{
+//               text: `Generate a ten-question quiz in MCQ format about the following topic: ${question}. Ensure each question includes multiple choices and is related to the context and dont give answer at last`
+//             }]
+//           },
+//         ]
+//       }
+//     });
 //     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 //     const genAI = new GoogleGenerativeAI(apiKey);
     

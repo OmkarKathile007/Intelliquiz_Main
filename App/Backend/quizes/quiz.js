@@ -1,185 +1,95 @@
-
-
-
-
 const questions = [
-    {
-      question: "What is the capital of France?",
-      answers: [
-        { text: "Paris", correct: true },
-        { text: "Berlin", correct: false },
-        { text: "London", correct: false },
-        { text: "Madrid", correct: false },
-      ],
-    },
-    {
-      question: "What is the chemical symbol for water?",
-      answers: [
-        { text: "H2O", correct: true },
-        { text: "CO2", correct: false },
-        { text: "O2", correct: false },
-        { text: "NaCl", correct: false },
-      ],
-    },
-    {
-      question: "What is the largest planet in our solar system?",
-      answers: [
-        { text: "Mercury", correct: false },
-        { text: "Venus", correct: false },
-        { text: "Mars", correct: false },
-        { text: "Jupiter", correct: true },
-      ],
-    },
-    {
-      question: "What is the chemical symbol for iron?",
-      answers: [
-        { text: "Fe", correct: true },
-        { text: "Ag", correct: false },
-        { text: "Au", correct: false },
-        { text: "Cu", correct: false },
-      ],
-    },
-    {
-      question: "Which famous scientist is known for the theory of evolution?",
-      answers: [
-        { text: "Galileo Galilei", correct: false },
-        { text: "Isaac Newton", correct: false },
-        { text: "Charles Darwin", correct: true },
-        { text: "Marie Curie", correct: false },
-      ],
-    },
-    {
-      question: "In which country was the game of chess invented?",
-      answers: [
-        { text: "China", correct: false },
-        { text: "India", correct: true },
-        { text: "Greece", correct: false },
-        { text: "Egypt", correct: false },
-      ],
-    },
-  
-    {
-      question: "Which gas is responsible for the Earth's ozone layer?",
-      answers: [
-        { text: "Oxygen", correct: false },
-        { text: "Carbon Dioxide", correct: false },
-        { text: "Nitrogen", correct: false },
-        { text: "Ozone", correct: true },
-      ],
-    },
-    {
-      question: "Which planet is known as the Red Planet?",
-      answers: [
-        { text: "Mars", correct: true },
-        { text: "Venus", correct: false },
-        { text: "Jupiter", correct: false },
-        { text: "Saturn", correct: false },
-      ],
-    },
-    {
-      question: "Which gas do plants use for photosynthesis?",
-      answers: [
-        { text: "Oxygen", correct: false },
-        { text: "Carbon Dioxide", correct: true },
-        { text: "Nitrogen", correct: false },
-        { text: "Helium", correct: false },
-      ],
-    },
-  
-    {
-      question: "What is the capital of Japan?",
-      answers: [
-        { text: "Beijing", correct: false },
-        { text: "Tokyo", correct: true },
-        { text: "Seoul", correct: false },
-        { text: "Bangkok", correct: false },
-      ],
-    },
-    {
-      question:
-        "Which famous scientist developed the theory of general relativity?",
-      answers: [
-        { text: "Isaac Newton", correct: false },
-        { text: "Albert Einstein", correct: true },
-        { text: "Nikola Tesla", correct: false },
-        { text: "Marie Curie", correct: false },
-      ],
-    },
-    {
-      question: "Which country is known as the 'Land of the Rising Sun'?",
-      answers: [
-        { text: "China", correct: false },
-        { text: "Japan", correct: true },
-        { text: "India", correct: false },
-        { text: "Egypt", correct: false },
-      ],
-    },
-  
-    {
-      question: "What is the chemical symbol for gold?",
-      answers: [
-        { text: "Ag", correct: false },
-        { text: "Au", correct: true },
-        { text: "Fe", correct: false },
-        { text: "Hg", correct: false },
-      ],
-    },
-    {
-      question: "Which planet is known as the 'Morning Star' or 'Evening Star'?",
-      answers: [
-        { text: "Mars", correct: false },
-        { text: "Venus", correct: true },
-        { text: "Mercury", correct: false },
-        { text: "Neptune", correct: false },
-      ],
-    },
-  
-    {
-      question: "What is the smallest prime number?",
-      answers: [
-        { text: "1", correct: false },
-        { text: "2", correct: true },
-        { text: "3", correct: false },
-        { text: "5", correct: false },
-      ],
-    },
-    {
-      question: "Which country is known as the 'Land of the Rising Sun'?",
-      answers: [
-        { text: "China", correct: false },
-        { text: "South Korea", correct: false },
-        { text: "Japan", correct: true },
-        { text: "Thailand", correct: false },
-      ],
-    },
-    {
-      question: "What is the largest ocean on Earth?",
-      answers: [
-        { text: "Atlantic Ocean", correct: false },
-        { text: "Indian Ocean", correct: false },
-        { text: "Arctic Ocean", correct: false },
-        { text: "Pacific Ocean", correct: true },
-      ],
-    },
-    {
-      question: "Which element has the chemical symbol 'K'?",
-      answers: [
-        { text: "Krypton", correct: false },
-        { text: "Potassium", correct: true },
-        { text: "Kryptonite", correct: false },
-        { text: "Kallium", correct: false },
-      ],
-    },
-    {
-      question: "What is the capital city of India?",
-      answers: [
-        { text: "Mumbai", correct: false },
-        { text: "New Delhi", correct: true },
-        { text: "Bangalore", correct: false },
-        { text: "Kolkata", correct: false },
-      ],
-    },
-  ];
+  {
+    question: "What is a transformer model in AI?",
+    answers: [
+      { text: "A neural network architecture based on self-attention mechanisms", correct: true },
+      { text: "A hardware accelerator for deep learning", correct: false },
+      { text: "A data processing pipeline for big data", correct: false },
+      { text: "A method for encrypting neural signals", correct: false },
+    ],
+  },
+  {
+    question: "Which framework is most popular for building deep learning models?",
+    answers: [
+      { text: "TensorFlow", correct: true },
+      { text: "Angular", correct: false },
+      { text: "React", correct: false },
+      { text: "Laravel", correct: false },
+    ],
+  },
+  {
+    question: "What does 'Big O' notation primarily describe in computer science?",
+    answers: [
+      { text: "Algorithmic complexity", correct: true },
+      { text: "Memory allocation", correct: false },
+      { text: "Data storage formats", correct: false },
+      { text: "Network latency", correct: false },
+    ],
+  },
+  {
+    question: "Which data structure is best suited for implementing an LRU (Least Recently Used) Cache?",
+    answers: [
+      { text: "Hash Map combined with a Doubly Linked List", correct: true },
+      { text: "Stack", correct: false },
+      { text: "Queue", correct: false },
+      { text: "Binary Search Tree", correct: false },
+    ],
+  },
+  {
+    question: "Which breakthrough has most significantly advanced natural language processing in recent years?",
+    answers: [
+      { text: "Transformer-based models", correct: true },
+      { text: "Decision trees", correct: false },
+      { text: "Support Vector Machines", correct: false },
+      { text: "Genetic algorithms", correct: false },
+    ],
+  },
+  {
+    question: "Which programming language is widely adopted in both CS education and AI research?",
+    answers: [
+      { text: "Python", correct: true },
+      { text: "Java", correct: false },
+      { text: "C++", correct: false },
+      { text: "Ruby", correct: false },
+    ],
+  },
+  {
+    question: "What technology underpins secure, decentralized verification in many modern applications?",
+    answers: [
+      { text: "Blockchain", correct: true },
+      { text: "Cloud Computing", correct: false },
+      { text: "Virtual Reality", correct: false },
+      { text: "Internet of Things", correct: false },
+    ],
+  },
+  {
+    question: "In machine learning, what does 'overfitting' refer to?",
+    answers: [
+      { text: "A model learning the training data too well, including noise, and performing poorly on new data", correct: true },
+      { text: "A model that cannot learn from the training data", correct: false },
+      { text: "A model trained on insufficient data", correct: false },
+      { text: "A model that generalizes perfectly to unseen data", correct: false },
+    ],
+  },
+  {
+    question: "Which innovation has revolutionized image generation in modern AI?",
+    answers: [
+      { text: "Generative Adversarial Networks (GANs)", correct: true },
+      { text: "Convolutional Neural Networks (CNNs)", correct: false },
+      { text: "Recurrent Neural Networks (RNNs)", correct: false },
+      { text: "Autoencoders", correct: false },
+    ],
+  },
+  {
+    question: "Who is renowned for pioneering theoretical computer science and proposing the Turing Test?",
+    answers: [
+      { text: "Alan Turing", correct: true },
+      { text: "John von Neumann", correct: false },
+      { text: "Claude Shannon", correct: false },
+      { text: "Donald Knuth", correct: false },
+    ],
+  },
+];
 
-  
-  export default questions;
+
+module.exports={questions}
