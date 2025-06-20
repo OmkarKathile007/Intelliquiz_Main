@@ -8,4 +8,6 @@ const StatsSchema = new mongoose.Schema({
   progress: [{ label: String, value: Number }],
   leaderboard: [{ name: String, score: Number }]
 });
+
+
 module.exports = mongoose.model('Stats', StatsSchema);

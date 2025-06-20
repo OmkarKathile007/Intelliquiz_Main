@@ -1,0 +1,94 @@
+```json
+{
+  "mcqs": [
+    {
+      "mcq": "When was Google founded?",
+      "options": {
+        "a": "September 4, 1998",
+        "b": "October 24, 2015",
+        "c": "December 3, 2019",
+        "d": "January 1, 2000"
+      },
+      "correct": "a",
+      "explanation": "Google was founded on September 4, 1998, by Larry Page and Sergey Brin."
+    },
+    {
+      "mcq": "Who were the co-founders of Google?",
+      "options": {
+        "a": "Bill Gates and Steve Jobs",
+        "b": "Larry Page and Sergey Brin",
+        "c": "Mark Zuckerberg and Elon Musk",
+        "d": "Jeff Bezos and Sundar Pichai"
+      },
+      "correct": "b",
+      "explanation": "Larry Page and Sergey Brin co-founded Google."
+    },
+    {
+      "mcq": "In what year did Google become a wholly owned subsidiary of Alphabet Inc.?",
+      "options": {
+        "a": "2000",
+        "b": "2010",
+        "c": "2015",
+        "d": "2020"
+      },
+      "correct": "c",
+      "explanation": "Google was reorganized as a wholly owned subsidiary of Alphabet Inc. in 2015."
+    },
+    {
+      "mcq": "Who is the current CEO of Alphabet Inc. as of the information in the text?",
+      "options": {
+        "a": "Larry Page",
+        "b": "Sergey Brin",
+        "c": "Sundar Pichai",
+        "d": "Eric Schmidt"
+      },
+      "correct": "c",
+      "explanation": "Sundar Pichai became the CEO of Alphabet on December 3, 2019."
+    },
+    {
+      "mcq": "Which of the following is NOT a discontinued Google product mentioned in the paragraph?",
+      "options": {
+        "a": "Stadia",
+        "b": "Gmail",
+        "c": "Google+",
+        "d": "Nexus"
+      },
+      "correct": "b",
+      "explanation": "Gmail is still an active product of Google; the paragraph mentions Stadia, Google+, and Nexus as discontinued products."
+    },
+    {
+      "mcq": "Besides Google Search, which other website is among the most visited worldwide?",
+      "options": {
+        "a": "Wikipedia",
+        "b": "YouTube",
+        "c": "Amazon",
+        "d": "Microsoft"
+      },
+      "correct": "b",
+      "explanation": "Google Search and YouTube are the two most-visited websites worldwide."
+    },
+    {
+      "mcq": "What type of AI model is Google DeepMind known for?",
+      "options": {
+        "a": "Quantum Computing",
+        "b": "Self-Driving Cars",
+        "c": "Smart Cities",
+        "d": "Transformer Models",
+      },
+      "correct": "d",
+      "explanation": "Google DeepMind is known for transformer models."
+    },
+    {
+      "mcq": "Which of these is not a Google product or service related to navigation?",
+      "options": {
+        "a": "Maps",
+        "b": "Earth",
+        "c": "Waze",
+        "d": "Drive"
+      },
+      "correct": "d",
+      "explanation": "Drive is a cloud storage service, while Maps, Earth, and Waze are navigation-related services."
+    }
+  ]
+}
+```
