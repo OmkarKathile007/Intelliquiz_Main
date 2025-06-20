@@ -26,6 +26,9 @@ const connectDB = async () => {
 }
 
 
+
+module.exports = connectDB;
+
 //const MONGODB_URI = process.env.MONGO_URI;
 
 
