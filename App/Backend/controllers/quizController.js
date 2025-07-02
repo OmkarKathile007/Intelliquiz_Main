@@ -12,7 +12,7 @@ exports.handleJoin = (socket, io) => (room, name) => {
 };
 
 exports.handleAnswer = (socket, io) => (room, answerIndex) => {
-  // similar logic moved here...
+  
 };
 
 function askQuestion(room, io) {
