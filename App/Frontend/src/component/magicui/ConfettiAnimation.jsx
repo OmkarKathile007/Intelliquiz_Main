@@ -15,7 +15,7 @@ const ConfettiAnimation = ({name}) => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center ">
       {showConfetti && (
         <Confetti
           width={window.innerWidth}
@@ -23,8 +23,8 @@ const ConfettiAnimation = ({name}) => {
           recycle={false} // Stops confetti from recycling
         />
       )}
-      <h1 className="text-4xl font-bold text-gray-800 mb-6">
-          Congratulations {name}, You Win !
+      <h1 className="text-4xl font-bold text-white mb-6">
+          Congratulations {name} 🏆
       </h1>
     </div>
   );
