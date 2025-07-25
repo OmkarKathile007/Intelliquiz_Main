@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -10,7 +9,8 @@ import ExamPng from "../../assets/exams.png";
 import SelfLearning from "../../assets/Self_Learning.png";
 import EmpAssessment from "../../assets/EMP_ASSESSMENT.png";
 import Footer from "../Footer/Footer";
-import bghome from './bghome.png'
+import bghome from "./bghome.png";
+// import { Marquee } from "../../component/magicui/marquee";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -61,9 +61,8 @@ const Home = () => {
     <>
       {/* Hero Section */}
       <div className="bg-black w-full scroll-smooth min-h-screen flex flex-col items-center justify-center">
-      
-     <div
-  className="
+        <div
+          className="
     w-full
     min-h-screen
     relative
@@ -74,17 +73,17 @@ const Home = () => {
     text-white
     px-4 sm:px-6 lg:px-8
   "
-   style={{
-        backgroundImage: `url(${bghome})`,
-      }}
->
-  {/* Dark overlay to ensure text remains legible */}
-  <div className="absolute inset-0 bg-black/80"></div>
+          style={{
+            backgroundImage: `url(${bghome})`,
+          }}
+        >
+          {/* Dark overlay to ensure text remains legible */}
+          <div className="absolute inset-0 bg-black/80"></div>
 
-  <div className="relative z-10 w-full mt-10 lg:mt-24 flex flex-col-reverse lg:flex-row justify-between items-center">
-    {/* Left-side Text Container */}
-    <div
-      className="
+          <div className="relative z-10 w-full mt-10 lg:mt-24 flex flex-col-reverse lg:flex-row justify-between items-center">
+            {/* Left-side Text Container */}
+            <div
+              className="
         lg:ml-16 xl:ml-32
        
         lg:w-1/2
@@ -94,9 +93,9 @@ const Home = () => {
         p-6
         rounded-lg
       "
-    >
-      <h2
-        className="
+            >
+              <h2
+                className="
           text-5xl sm:text-4xl md:text-4xl lg:text-7xl xl:text-7xl
           font-bold
           text-transparent
@@ -105,12 +104,12 @@ const Home = () => {
           drop-shadow-lg
           animate-fade-in-up
         "
-      >
-        Personalized AI Learning
-      </h2>
+              >
+                Personalized AI Learning
+              </h2>
 
-      <p
-        className="
+              <p
+                className="
           mt-4 sm:mt-6
           text-sm sm:text-base md:text-lg lg:text-xl
           font-raleway
@@ -124,16 +123,16 @@ const Home = () => {
           transition-transform duration-500 ease-out
           hover:scale-102
         "
-      >
-        Elevate your learning with AI-driven quizzes and multiplayer
-        online modes, designed to make studying smarter and more
-        engaging for students.
-      </p>
+              >
+                Elevate your learning with AI-driven quizzes and multiplayer
+                online modes, designed to make studying smarter and more
+                engaging for students.
+              </p>
 
-      <div className="flex justify-center lg:justify-start sm:mt-8">
-        <button
-          onClick={handleClick}
-          className="
+              <div className="flex justify-center lg:justify-start sm:mt-8">
+                <button
+                  onClick={handleClick}
+                  className="
             bg-gradient-to-r from-cyan-400 via-blue-500 to-blue-800
             border border-gray-300
             drop-shadow-lg
@@ -144,28 +143,27 @@ const Home = () => {
             transition-transform duration-300 ease-out
             hover:scale-105
           "
-        >
-          Get Started
-        </button>
-      </div>
-    </div>
+                >
+                  Get Started
+                </button>
+              </div>
+            </div>
 
-    {/* Right-side Image */}
-    <div className="flex justify-center lg:justify-end lg:w-1/2">
-      <img
-        className="
+            {/* Right-side Image */}
+            <div className="flex justify-center lg:justify-end lg:w-1/2">
+              <img
+                className="
           w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl
           mt-6 sm:mt-10 lg:mt-20
           drop-shadow-[0_10px_15px_rgba(135,206,235,0.7)]
           animate-move-up-down
         "
-        src={AIimage}
-        alt="AI Illustration"
-      />
-    </div>
-  </div>
-</div>
-
+                src={AIimage}
+                alt="AI Illustration"
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Features Section */}
         <hr className="w-full mt-16 md:mt-32 lg:mt-56 border-gray-600" />
@@ -265,6 +263,7 @@ const Home = () => {
 
         {/* Made For Whom Section */}
         <div className="bg-black w-full pb-16 sm:pb-24 lg:pb-32 px-4 sm:px-6 lg:px-8">
+          
           <div className="w-full mt-12 sm:mt-16 lg:mt-20">
             <p className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl text-white md:font-bold text-center">
               MADE FOR WHOM?

@@ -6,6 +6,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import io from 'socket.io-client';
 import ConfettiAnimation from '../../component/magicui/ConfettiAnimation';
+import ScoreBoard from './ScoreBoard';
 
 // // http://localhost:3000  VITE_REACT_APP_BACKEND_BASEURL=http://localhost:3000
 // // const socket = io("ws://localhost:5000");
@@ -106,7 +107,7 @@ export default function MultiplayerQuiz() {
       <ToastContainer />
 
       {!joined ? (
-        <div className="relative bg-neutral-800 border-2 border-white bg-opacity-60 backdrop-blur-lg rounded-2xl  sm:w-3/4 md:w-1/2  p-6 sm:p-8 text-white shadow-xl mx-auto">
+        <div className="relative bg-neutral-800 border border-gray-500 bg-opacity-60 backdrop-blur-lg rounded-2xl  sm:w-3/4 md:w-1/2  p-6 sm:p-8 text-white shadow-xl mx-auto">
       {/* Floating icons */}
       <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 flex space-x-4">
         <FaTrophy className="text-yellow-400 text-2xl sm:text-3xl" />
@@ -193,7 +194,7 @@ export default function MultiplayerQuiz() {
             <div className="text-center py-8">Loading question...</div>
           )}
 
-          <div className="mt-6 bg-white bg-opacity-20 rounded-lg p-4 max-h-48 overflow-y-auto">
+          {/* <div className="mt-6 bg-white border-2 border-green-300 bg-opacity-20 rounded-lg p-4 max-h-48 overflow-y-auto">
             {scores.map((p, idx) => (
               <div key={idx} className="flex justify-between mb-2">
                 <span>{idx + 1}. {p.name}</span>
@@ -202,7 +203,8 @@ export default function MultiplayerQuiz() {
                 </span>
               </div>
             ))}
-          </div>
+          </div> */}
+          <ScoreBoard scores={scores}/>
         </div>
       )}
     </div>

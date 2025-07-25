@@ -390,8 +390,8 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-900 via-blue-950 to-gray-900">
-      <div className="w-full max-w-md p-8 space-y-6 rounded-xl bg-blue-900/30 backdrop-blur-sm border border-blue-600/30 shadow-2xl shadow-blue-900/50">
+    <div className="flex  items-center justify-center min-h-screen bg-gradient-to-br from-blue-900 via-blue-950 to-gray-900">
+      <div className="w-full max-w-md border-2 border-green-200 p-8 space-y-6 rounded-xl bg-blue-900/30 backdrop-blur-sm border border-blue-600/30 shadow-2xl shadow-blue-900/50">
         <h2 className="text-3xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400">
           {isLogin ? "Welcome Back" : "Create Account"}
         </h2>
@@ -459,6 +459,7 @@ const Login = () => {
         </form>
 
         {/* Google Sign-In */}
+        {isLogin &&
         <button
           onClick={handleGoogleSignIn}
           className="w-full flex items-center justify-center px-4 py-3 space-x-2 bg-blue-900/40 border border-blue-600/30 rounded-lg hover:bg-blue-900/60 text-blue-200 transition-colors"
@@ -470,6 +471,7 @@ const Login = () => {
           />
           <span>Sign in with Google</span>
         </button>
+}
 
         {/* Toggle Form */}
         <p className="text-center text-blue-200/80">
