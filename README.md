@@ -4,7 +4,17 @@
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?logo=vercel)](https://intelliquiz-main-4v98.vercel.app)  
 
 ![Landing Page](App/Frontend/src/assets/platform.png)
+### FEATURES 
 ![Main Page](App/Frontend/src/assets/maintab.png)
+
+### YOUR TEXT PARA TO MCQ 
+![Main Page](App/Frontend/src/assets/int1.png)
+
+### PLAY MULTIPLAYER ONLINE MODE WITH FRIENDS 
+![Main Page](App/Frontend/src/assets/int2.png)
+
+### ONLINE ASSESSEMENTS TEST 
+![Main Page](App/Frontend/src/assets/int3.png)
 ---
 
 ## Table of Contents
