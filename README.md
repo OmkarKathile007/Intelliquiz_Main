@@ -33,7 +33,7 @@
 
 ## Overview
 
-**IntelliQuiz** is a modern, AI-driven quiz generation and multiplayer trivia platform designed to make learning engaging, accessible, and efficient. Leveraging Google Gemini for on-the-fly quiz creation and Firebase for real-time multiplayer functionality, IntelliQuiz empowers educators, students, and self-learners to convert any text or paragraph into interactive multiple-choice quizzes in under 5 seconds.  
+**IntelliQuiz** is a modern, AI-driven quiz generation and multiplayer trivia platform designed to make learning engaging, accessible, and efficient. Leveraging Google Gemini for on-the-fly quiz creation and Firebase for real-time authentication and SocketIO multiplayer functionality, IntelliQuiz empowers educators, students, and self-learners to convert any text or paragraph into interactive multiple-choice quizzes in under 5 seconds.  
 
 Whether you're preparing for campus placements, building adaptive learning modules, or hosting competitive quiz sessions, IntelliQuiz has you covered.
 
