@@ -63,7 +63,7 @@ Whether you're preparing for campus placements, building adaptive learning modul
   
 
 ---
-# >> IF YOU HAVE CAME UP TO HERE PLEASE GIVE THIS REPO STAR
+# >> IF YOU HAVE CAME UP TO HERE PLEASE GIVE THIS REPO A STAR 🙏🙏
 ## Technology Stack
 
 - **Frontend:**  
