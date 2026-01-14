@@ -4,7 +4,17 @@
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?logo=vercel)](https://intelliquiz-main-4v98.vercel.app)  
 
 ![Landing Page](App/Frontend/src/assets/platform.png)
+### FEATURES 
 ![Main Page](App/Frontend/src/assets/maintab.png)
+
+### YOUR TEXT PARA TO MCQ 
+![Main Page](App/Frontend/src/assets/int1.png)
+
+### PLAY MULTIPLAYER ONLINE MODE WITH FRIENDS 
+![Main Page](App/Frontend/src/assets/int2.png)
+
+### ONLINE ASSESSEMENTS TEST 
+![Main Page](App/Frontend/src/assets/int3.png)
 ---
 
 ## Table of Contents
@@ -23,7 +33,7 @@
 
 ## Overview
 
-**IntelliQuiz** is a modern, AI-driven quiz generation and multiplayer trivia platform designed to make learning engaging, accessible, and efficient. Leveraging Google Gemini for on-the-fly quiz creation and Firebase for real-time multiplayer functionality, IntelliQuiz empowers educators, students, and self-learners to convert any text or paragraph into interactive multiple-choice quizzes in under 5 seconds.  
+**IntelliQuiz** is a modern, AI-driven quiz generation and multiplayer trivia platform designed to make learning engaging, accessible, and efficient. Leveraging Google Gemini for on-the-fly quiz creation and Firebase for real-time authentication and SocketIO multiplayer functionality, IntelliQuiz empowers educators, students, and self-learners to convert any text or paragraph into interactive multiple-choice quizzes in under 5 seconds.  
 
 Whether you're preparing for campus placements, building adaptive learning modules, or hosting competitive quiz sessions, IntelliQuiz has you covered.
 
@@ -53,7 +63,7 @@ Whether you're preparing for campus placements, building adaptive learning modul
   
 
 ---
-
+# >> IF YOU HAVE CAME UP TO HERE PLEASE GIVE THIS REPO A STAR 🙏🙏
 ## Technology Stack
 
 - **Frontend:**  
