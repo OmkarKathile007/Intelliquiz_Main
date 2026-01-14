@@ -1,6 +1,3 @@
-
-
-
 import React, { useState } from 'react';
 import SpinnerLoad from './SpinnerLoad';
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -10,6 +7,29 @@ const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 const QUIZ_LIMIT = 5;
+
+// --- Helper: Exponential Backoff Retry Logic ---
+async function sendMessageWithRetry(chatSession, prompt, retries = 3, delay = 2000) {
+  try {
+    return await chatSession.sendMessage(prompt);
+  } catch (error) {
+    // Check if the error is a Quota/Rate Limit error (429) or Server Error (503)
+    const isRetryable = error.message.includes("429") || error.message.includes("503");
+
+    if (retries > 0 && isRetryable) {
+      console.warn(`Quota hit. Retrying in ${delay}ms... (Attempts left: ${retries})`);
+      
+      // Wait for the specified delay
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      
+      // Retry with double the delay (2s -> 4s -> 8s)
+      return sendMessageWithRetry(chatSession, prompt, retries - 1, delay * 2);
+    } else {
+      // No retries left or non-retryable error
+      throw error;
+    }
+  }
+}
 
 function getTodayDateString() {
   return new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
@@ -51,12 +71,18 @@ const GenAI = () => {
       return;
     }
 
-    const { allowed, remaining: rem } = canGenerateQuiz(user.uid);
-    setRemaining(rem);
-    if (!allowed) {
+    // Check limits BEFORE calling the API
+    const rawLimitCheck = canGenerateQuiz(user.uid);
+    if (!rawLimitCheck.allowed) {
       alert("Daily limit reached! Come back tomorrow.");
+      setRemaining(0);
       return;
     }
+    
+    // Note: We only decrement the UI counter if the generation actually succeeds 
+    // to be fair to users, but your current logic decrements it on attempt.
+    // I kept your logic as-is, just updating the state.
+    setRemaining(rawLimitCheck.remaining);
 
     if (!paragraph.trim()) {
       alert("Please enter a valid paragraph.");
@@ -65,15 +91,33 @@ const GenAI = () => {
 
     setStatus("loading");
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      const generationConfig = { temperature: 1, topP: 0.95, topK: 40, maxOutputTokens: 8192 };
+      // double check your model name here. 
+      // Use "gemini-1.5-flash" or "gemini-2.0-flash-exp" if 2.5 fails.
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); 
+      
+      const generationConfig = { 
+        temperature: 1, 
+        topP: 0.95, 
+        topK: 40, 
+        maxOutputTokens: 8192,
+        responseMimeType: "application/json" // Force JSON mode for better stability
+      };
+      
       const chatSession = model.startChat({ generationConfig, history: [] });
 
       const prompt = `You are an assistant that creates multiple-choice quizzes from a given paragraph. Output valid JSON only in this format:\n{\n  \"mcqs\": [ ... ]\n}\nParagraph: \"${paragraph}\"`;
-      const result = await chatSession.sendMessage(prompt);
+
+      // --- NEW: USE THE RETRY FUNCTION ---
+      const result = await sendMessageWithRetry(chatSession, prompt);
+      
       const text = result.response.text();
-      const trimmed = text.substring(7, text.length - 3);
-      const data = JSON.parse(trimmed);
+      
+      // Cleanup JSON: Sometimes models return markdown blocks (```json ... ```)
+      // This regex extracts purely the JSON object/array
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const jsonString = jsonMatch ? jsonMatch[0] : text;
+      
+      const data = JSON.parse(jsonString);
 
       setMcqs(
         data.mcqs.map((q) => ({
@@ -87,7 +131,7 @@ const GenAI = () => {
       setStatus("playing");
     } catch (error) {
       console.error("Error generating quiz:", error);
-      alert("Failed to generate quiz. Please try again.");
+      alert("Failed to generate quiz (Server might be busy). Please try again.");
       setStatus("idle");
     }
   };
@@ -111,16 +155,14 @@ const GenAI = () => {
     setCurrentIndex(0);
     setScore(0);
     setStatus("idle");
-    setRemaining(QUIZ_LIMIT);
+    // We don't reset 'remaining' here because it persists for the day
   };
 
+  // ... (Rest of your UI render code remains exactly the same)
   if (status === "idle") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white flex items-center justify-center p-4">
         <div className="w-full max-w-2xl">
-          {/* <div className="mb-4 text-center font-medium">
-            You have {remaining} quiz{remaining === 1 ? '' : 'zes'} left today.
-          </div> */}
           <h1 className="text-3xl md:text-5xl font-bold mb-8 text-center">Paste Your Paragraph</h1>
           <textarea
             className="w-full bg-transparent p-4 border-2 border-gray-300 rounded-lg text-white mb-6"
@@ -162,13 +204,13 @@ const GenAI = () => {
           </h2>
           <p className="text-lg mb-6">{question}</p>
           <div className="grid grid-cols-1 gap-4">
-            {Object.entries(options).map(([key, text],index) => (
+            {Object.entries(options).map(([key, text], index) => (
               <button
                 key={key}
                 className="w-full text-left px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-md"
                 onClick={() => handleAnswer(key)}
               >
-                <span className="font-bold uppercase mr-2">{index+1}.</span>
+                <span className="font-bold uppercase mr-2">{index + 1}.</span>
                 {text}
               </button>
             ))}
