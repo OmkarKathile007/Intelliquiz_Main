@@ -2,3 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .assessment-shell {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .assessment-panel-scroll {
+    min-height: 0;
+  }
+
+  .assessment-question-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    .assessment-shell {
+      grid-template-columns: 220px minmax(0, 1fr) 280px;
+      height: calc(100vh - 285px);
+      min-height: 500px;
+      overflow: hidden;
+    }
+
+    .assessment-panel-scroll {
+      height: 100%;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(34, 211, 238, 0.35) rgba(255, 255, 255, 0.05);
+    }
+
+    .assessment-panel-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .assessment-panel-scroll::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 999px;
+    }
+
+    .assessment-panel-scroll::-webkit-scrollbar-thumb {
+      background: rgba(34, 211, 238, 0.35);
+      border-radius: 999px;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .assessment-shell {
+      grid-template-columns: 240px minmax(0, 1fr) 300px;
+      height: calc(100vh - 270px);
+    }
+  }
+}
