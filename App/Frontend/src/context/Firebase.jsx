@@ -75,7 +75,7 @@ import {
 const FirebaseContext = createContext(null);
 
 const firebaseConfig = {
-  apiKey:             import.meta.env.VITE_FIREBASE_API_KEY            ,
+  apiKey:             import.meta.env.VITE_FIREBASE_API_KEY             || "AIzaSyDd97uWkQi-DX6vxUj7_Wlcn1duusY5GJE",
   authDomain:         import.meta.env.VITE_FIREBASE_AUTH_DOMAIN         || "authentication-825f6.firebaseapp.com",
   projectId:          import.meta.env.VITE_FIREBASE_PROJECT_ID          || "authentication-825f6",
   storageBucket:      import.meta.env.VITE_FIREBASE_STORAGE_BUCKET      || "authentication-825f6.firebasestorage.app",
