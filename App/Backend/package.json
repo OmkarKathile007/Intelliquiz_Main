@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon server.js"
   },
   "author": "\"Omkar Kathile\"",
   "license": "ISC",
@@ -19,6 +19,8 @@
     "dotenv": "^16.4.7",
     "express": "^4.19.2",
     "mongoose": "^8.5.3",
-    "socket.io": "^4.8.0"
+    "razorpay": "^2.9.6",
+    "socket.io": "^4.8.0",
+    "socket.io-client": "^4.8.3"
   }
 }
