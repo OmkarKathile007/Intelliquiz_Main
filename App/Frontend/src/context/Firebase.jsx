@@ -75,12 +75,12 @@ import {
 const FirebaseContext = createContext(null);
 
 const firebaseConfig = {
-  apiKey:             import.meta.env.VITE_FIREBASE_API_KEY             || "AIzaSyDd97uWkQi-DX6vxUj7_Wlcn1duusY5GJE",
-  authDomain:         import.meta.env.VITE_FIREBASE_AUTH_DOMAIN         || "authentication-825f6.firebaseapp.com",
-  projectId:          import.meta.env.VITE_FIREBASE_PROJECT_ID          || "authentication-825f6",
-  storageBucket:      import.meta.env.VITE_FIREBASE_STORAGE_BUCKET      || "authentication-825f6.firebasestorage.app",
-  messagingSenderId:  import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "721169518533",
-  appId:              import.meta.env.VITE_FIREBASE_APP_ID              || "1:721169518533:web:81438ec1612ff0b6a705ac",
+  apiKey:             import.meta.env.VITE_FIREBASE_API_KEY,             
+  authDomain:         import.meta.env.VITE_FIREBASE_AUTH_DOMAIN   ,     
+  projectId:          import.meta.env.VITE_FIREBASE_PROJECT_ID ,         
+  storageBucket:      import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ,     
+  messagingSenderId:  import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ,
+  appId:              import.meta.env.VITE_FIREBASE_APP_ID              
 };
 
 export const useFirebase = () => useContext(FirebaseContext);

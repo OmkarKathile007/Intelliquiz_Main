@@ -24,7 +24,15 @@ const Stats = require("./models/Stats");
 
 const app = express();
 
-const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:5173").split(",");
+// Always allow these origins; CORS_ORIGINS (comma-separated) can add more.
+const DEFAULT_ORIGINS = [
+  "http://localhost:5173",
+  "https://intelliquiz-main-4v98.vercel.app",
+];
+const allowedOrigins = [
+  ...DEFAULT_ORIGINS,
+  ...(process.env.CORS_ORIGINS || "").split(",").map((o) => o.trim()).filter(Boolean),
+];
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 
