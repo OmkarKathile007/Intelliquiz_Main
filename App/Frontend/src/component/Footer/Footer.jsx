@@ -50,7 +50,7 @@ import { FaLinkedin, FaSquareXTwitter } from "react-icons/fa6";
 
 const Footer = () => {
   return (
-    <div className='bg-black w-full py-8 border-t-2 border-white text-white'>
+    <div className='bg-black w-full py-8 border-t border-white/10 text-white'>
       <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
         <div className='flex flex-col md:flex-row justify-between items-center gap-8'>
           {/* Brand Section */}

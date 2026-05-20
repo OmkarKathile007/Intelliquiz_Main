@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowRight, Play, Sparkles } from "lucide-react";
 
 import AIimage from "../../assets/AI-Image.png";
 import brainImage from "../../assets/brain.png";
@@ -9,7 +10,9 @@ import ExamPng from "../../assets/exams.png";
 import SelfLearning from "../../assets/Self_Learning.png";
 import EmpAssessment from "../../assets/EMP_ASSESSMENT.png";
 import Footer from "../Footer/Footer";
+import HeroVisual from "./HeroVisual";
 import bghome from "./bghome.png";
+import ShaderBackground from "@/components/ui/shader-background";
 // import { Marquee } from "../../component/magicui/marquee";
 
 const Home = () => {
@@ -149,18 +152,9 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Right-side Image */}
-            <div className="flex justify-center lg:justify-end lg:w-1/2">
-              <img
-                className="
-          w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl
-          mt-6 sm:mt-10 lg:mt-20
-          drop-shadow-[0_10px_15px_rgba(135,206,235,0.7)]
-          animate-move-up-down
-        "
-                src={AIimage}
-                alt="AI Illustration"
-              />
+            {/* Right-side holographic AI visual */}
+            <div className="flex justify-center lg:justify-end lg:w-1/2 mt-6 sm:mt-10 lg:mt-20">
+              <HeroVisual src={AIimage} alt="AI Illustration" />
             </div>
           </div>
         </div>
@@ -346,6 +340,49 @@ const Home = () => {
             </p>
           </div>
         </div>
+
+        {/* Final CTA Section */}
+        <section className="relative isolate w-full overflow-hidden bg-black px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-32">
+          <ShaderBackground className="absolute inset-0 h-full w-full opacity-70" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.18),transparent_34%),linear-gradient(180deg,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.38)_42%,rgba(0,0,0,0.92)_100%)]" />
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black to-transparent" />
+
+          <div className="relative z-10 mx-auto max-w-5xl rounded-2xl border border-cyan-300/20  px-5 py-10 text-center shadow-[0_0_80px_rgba(34,211,238,0.16)] backdrop-blur-xl sm:px-8 sm:py-12 lg:px-14 lg:py-16">
+            {/* <div className="mx-auto mb-6 flex w-fit items-center gap-2 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-100">
+              <Sparkles className="h-4 w-4" />
+              AI quiz engine
+            </div> */}
+
+            <h2 className="mx-auto max-w-4xl bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-3xl font-bold leading-tight text-transparent drop-shadow-2xl sm:text-4xl md:text-5xl lg:text-6xl">
+              Transform Any Content into Interactive Learning
+            </h2>
+
+            <p className="mx-auto mt-6 max-w-3xl text-sm leading-7 text-gray-200 sm:text-base md:text-lg">
+              Generate AI-powered quizzes instantly, collaborate in multiplayer
+              mode, and prepare smarter for exams, placements, and
+              self-learning.
+            </p>
+
+            <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <button
+                onClick={handleClick}
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-md border border-cyan-200/40 bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-700 px-6 py-3 text-sm font-semibold text-white shadow-[0_0_30px_rgba(59,130,246,0.35)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_0_42px_rgba(34,211,238,0.45)] sm:w-auto sm:px-8"
+              >
+                Get Started Free
+                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </button>
+
+              <button
+                onClick={() => navigate("/multiplayer")}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:border-cyan-200/50 hover:bg-white/15 sm:w-auto sm:px-8"
+              >
+                <Play className="h-4 w-4 fill-current" />
+                Live Demo
+              </button>
+            </div>
+          </div>
+        </section>
       </div>
       <Footer />
     </>
