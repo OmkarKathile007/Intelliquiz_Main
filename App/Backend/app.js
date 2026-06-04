@@ -18,8 +18,9 @@ require("dotenv").config();
 const express = require("express");
 const cors    = require("cors");
 const connectDB       = require("./config/db");
-const dashboardRoutes = require("./routes/dashboard");
+const dashboardRoutes    = require("./routes/dashboard");
 const subscriptionRoutes = require("./routes/subscription");
+const quizRoutes         = require("./routes/quiz");
 const Stats = require("./models/Stats");
 
 const app = express();
@@ -40,6 +41,7 @@ connectDB();
 
 app.use("/dashboard/api",    dashboardRoutes);
 app.use("/api/subscription", subscriptionRoutes);
+app.use("/quiz/api",         quizRoutes);
 
 app.get("/dashboard/api/stats/:playerId", async (req, res) => {
   try {
