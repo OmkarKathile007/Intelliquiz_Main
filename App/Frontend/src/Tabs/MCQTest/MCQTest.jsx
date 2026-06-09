@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -18,6 +18,9 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+import { useFirebase } from "../../context/Firebase";
+
+const BASE_URL = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL || "http://localhost:5000";
 
 const assessmentModules = [
   {
@@ -28,11 +31,10 @@ const assessmentModules = [
     difficulty: "Easy",
     duration: "18 min",
     questions: 20,
-    completion: 72,
+    quizId: 1,
     category: ["Core CS", "Campus Prep", "Foundation"],
     accent: "from-cyan-400 to-blue-500",
     icon: Brain,
-    students: "12.4k attempts",
   },
   {
     title: "DSA Fundamentals Assessment",
@@ -42,11 +44,10 @@ const assessmentModules = [
     difficulty: "Medium",
     duration: "22 min",
     questions: 20,
-    completion: 46,
+    quizId: 2,
     category: ["DSA", "Problem Solving", "Interview"],
     accent: "from-blue-400 to-violet-500",
     icon: Target,
-    students: "9.8k attempts",
   },
   {
     title: "Online Assessment Simulator",
@@ -56,42 +57,10 @@ const assessmentModules = [
     difficulty: "Hard",
     duration: "25 min",
     questions: 20,
-    completion: 28,
+    quizId: 3,
     category: ["OA", "Hiring", "Proctored"],
     accent: "from-fuchsia-400 to-cyan-400",
     icon: ShieldCheck,
-    students: "15.1k attempts",
-  },
-];
-
-const stats = [
-  { label: "Questions solved", value: "248", icon: CheckCircle2 },
-  { label: "Accuracy", value: "87%", icon: Gauge },
-  { label: "Campus rank", value: "#412", icon: Trophy },
-  { label: "Learning streak", value: "12d", icon: Flame },
-  { label: "Assessments", value: "31", icon: Medal },
-];
-
-const sections = [
-  {
-    title: "Recommended assessments",
-    items: ["CS Fundamentals Screening", "Online Assessment Simulator"],
-    icon: Sparkles,
-  },
-  {
-    title: "Recently attempted",
-    items: ["DBMS Basics", "Arrays and Hashing"],
-    icon: CalendarClock,
-  },
-  {
-    title: "Popular among students",
-    items: ["DSA Fundamentals", "Operating Systems MCQ"],
-    icon: Users,
-  },
-  {
-    title: "Placement preparation tracks",
-    items: ["Product Companies", "Service-Based Hiring"],
-    icon: GraduationCap,
   },
 ];
 
@@ -101,7 +70,90 @@ const difficultyStyles = {
   Hard: "border-rose-300/30 bg-rose-300/10 text-rose-100",
 };
 
+function formatAttempts(n) {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k attempts`;
+  return `${n} attempt${n !== 1 ? "s" : ""}`;
+}
+
 const MCQTest = () => {
+  const { user } = useFirebase();
+  const [userStats, setUserStats]           = useState(null);
+  const [moduleStats, setModuleStats]       = useState([]);
+  const [userModuleStats, setUserModuleStats] = useState([]);
+  const [loading, setLoading]               = useState(true);
+
+  useEffect(() => {
+    if (!user?.uid) { setLoading(false); return; }
+
+    Promise.all([
+      fetch(`${BASE_URL}/quiz/api/user-stats/${user.uid}`).then((r) => r.json()),
+      fetch(`${BASE_URL}/quiz/api/module-stats`).then((r) => r.json()),
+      fetch(`${BASE_URL}/quiz/api/user-module-stats/${user.uid}`).then((r) => r.json()),
+    ])
+      .then(([stats, modStats, userModStats]) => {
+        setUserStats(stats?.questionsAnswered != null ? stats : null);
+        setModuleStats(Array.isArray(modStats) ? modStats : []);
+        setUserModuleStats(Array.isArray(userModStats) ? userModStats : []);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [user?.uid]);
+
+  const statCards = [
+    { label: "Questions solved", value: userStats ? String(userStats.questionsAnswered) : "—", icon: CheckCircle2 },
+    { label: "Accuracy",         value: userStats ? `${userStats.accuracy}%` : "—",             icon: Gauge },
+    { label: "Campus rank",      value: userStats?.campusRank ? `#${userStats.campusRank}` : "—", icon: Trophy },
+    { label: "Learning streak",  value: userStats ? `${userStats.learningStreak}d` : "—",        icon: Flame },
+    { label: "Assessments",      value: userStats ? String(userStats.assessmentsCompleted) : "—", icon: Medal },
+  ];
+
+  const recentItems = userStats?.recentAttempts?.length
+    ? userStats.recentAttempts
+    : ["No attempts yet"];
+
+  const sections = [
+    {
+      title: "Recommended assessments",
+      items: userStats?.nextRecommended
+        ? [userStats.nextRecommended, "Online Assessment Simulator"].filter(
+            (v, i, arr) => arr.indexOf(v) === i
+          )
+        : ["CS Fundamentals Screening", "Online Assessment Simulator"],
+      icon: Sparkles,
+    },
+    {
+      title: "Recently attempted",
+      items: recentItems,
+      icon: CalendarClock,
+    },
+    {
+      title: "Popular among students",
+      items: ["DSA Fundamentals", "Operating Systems MCQ"],
+      icon: Users,
+    },
+    {
+      title: "Placement preparation tracks",
+      items: ["Product Companies", "Service-Based Hiring"],
+      icon: GraduationCap,
+    },
+  ];
+
+  const dynamicModules = assessmentModules.map((mod) => {
+    const globalStat = moduleStats.find((s) => s._id === mod.quizId);
+    const userStat   = userModuleStats.find((s) => s._id === mod.quizId);
+    const totalAttempts = globalStat?.totalAttempts ?? 0;
+    const completion    = Math.round(userStat?.bestAccuracy ?? 0);
+    return {
+      ...mod,
+      completion,
+      students: totalAttempts > 0 ? formatAttempts(totalAttempts) : "0 attempts",
+    };
+  });
+
+  const readinessScore = userStats?.readinessScore ?? 0;
+  const sprintNumber   = userStats?.sprintNumber   ?? "01";
+  const nextQuiz       = userStats?.nextRecommended ?? "CS Fundamentals Screening";
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-black px-4 pb-16 pt-24 text-white sm:px-6 lg:px-8">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.18),transparent_32%),radial-gradient(circle_at_80%_20%,rgba(124,58,237,0.16),transparent_28%),linear-gradient(180deg,#020617_0%,#030712_42%,#000_100%)]" />
@@ -111,10 +163,6 @@ const MCQTest = () => {
       <div className="relative z-10 mx-auto max-w-7xl">
         <section className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
           <div>
-            {/* <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-100">
-              <ShieldCheck className="h-4 w-4" />
-              IntelliQuiz Assessment Cloud
-            </div> */}
             <h1 className="max-w-4xl text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
               Practice in a real enterprise assessment environment.
             </h1>
@@ -130,7 +178,7 @@ const MCQTest = () => {
               <div>
                 <p className="text-sm text-slate-400">AI recommended path</p>
                 <h2 className="mt-1 text-2xl font-semibold text-white">
-                  Placement Sprint 04
+                  Placement Sprint {sprintNumber}
                 </h2>
               </div>
               <div className="rounded-full border border-cyan-300/20 bg-cyan-300/10 p-3 text-cyan-200">
@@ -138,17 +186,20 @@ const MCQTest = () => {
               </div>
             </div>
             <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full w-[64%] rounded-full bg-gradient-to-r from-cyan-400 to-blue-500" />
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-700"
+                style={{ width: `${readinessScore}%` }}
+              />
             </div>
             <div className="mt-4 flex items-center justify-between text-sm text-slate-300">
-              <span>64% readiness score</span>
-              <span>Next: DSA Fundamentals</span>
+              <span>{loading ? "…" : `${readinessScore}% readiness score`}</span>
+              <span>Next: {nextQuiz}</span>
             </div>
           </div>
         </section>
 
         <section className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {stats.map((stat) => {
+          {statCards.map((stat) => {
             const Icon = stat.icon;
             return (
               <div
@@ -159,7 +210,7 @@ const MCQTest = () => {
                   <Icon className="h-5 w-5 text-cyan-200" />
                   <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_14px_rgba(110,231,183,0.8)]" />
                 </div>
-                <p className="mt-5 text-2xl font-bold text-white">{stat.value}</p>
+                <p className="mt-5 text-2xl font-bold text-white">{loading ? "…" : stat.value}</p>
                 <p className="mt-1 text-sm text-slate-400">{stat.label}</p>
               </div>
             );
@@ -184,7 +235,7 @@ const MCQTest = () => {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-3">
-            {assessmentModules.map((module, index) => {
+            {dynamicModules.map((module, index) => {
               const Icon = module.icon;
               return (
                 <motion.article
@@ -246,12 +297,12 @@ const MCQTest = () => {
 
                   <div className="relative mt-6">
                     <div className="mb-2 flex justify-between text-xs text-slate-400">
-                      <span>Completion progress</span>
+                      <span>Your best score</span>
                       <span>{module.completion}%</span>
                     </div>
                     <div className="h-2 overflow-hidden rounded-full bg-white/10">
                       <div
-                        className={`h-full rounded-full bg-gradient-to-r ${module.accent}`}
+                        className={`h-full rounded-full bg-gradient-to-r ${module.accent} transition-all duration-700`}
                         style={{ width: `${module.completion}%` }}
                       />
                     </div>
