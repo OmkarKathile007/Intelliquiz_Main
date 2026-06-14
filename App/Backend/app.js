@@ -21,6 +21,7 @@ const connectDB       = require("./config/db");
 const dashboardRoutes    = require("./routes/dashboard");
 const subscriptionRoutes = require("./routes/subscription");
 const quizRoutes         = require("./routes/quiz");
+const transcriptRoutes   = require("./routes/transcript");
 const Stats = require("./models/Stats");
 
 const app = express();
@@ -42,6 +43,7 @@ connectDB();
 app.use("/dashboard/api",    dashboardRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use("/quiz/api",         quizRoutes);
+app.use("/api/transcript",   transcriptRoutes);
 
 app.get("/dashboard/api/stats/:playerId", async (req, res) => {
   try {
