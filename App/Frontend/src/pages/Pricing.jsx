@@ -77,7 +77,7 @@ export default function Pricing() {
     setLoadingPlan(planKey);
     try {
       const ready = await loadRazorpay();
-      if (!ready) throw new Error("Razorpay failed to load.");
+      if (!ready) throw new Error("Payment SDK failed to load. Check your internet connection and try again.");
 
       const res = await fetch(`${BACKEND}/api/subscription/create-order`, {
         method: "POST",
@@ -86,42 +86,53 @@ export default function Pricing() {
       });
 
       const orderData = await res.json();
-      if (!res.ok) throw new Error(orderData.detail || orderData.msg || "Could not create order.");
+      if (!res.ok) throw new Error(orderData.detail || orderData.msg || "Could not create payment order.");
       const { orderId, amount, currency, keyId } = orderData;
 
-      const options = {
-        key: keyId,
-        amount,
-        currency,
-        name: "IntelliQuiz",
-        description: `${PLANS[planKey].label} Plan – ₹${PLANS[planKey].price}/mo`,
-        order_id: orderId,
-        prefill: { email: user.email, name: user.displayName || "" },
-        theme: { color: "#06b6d4" },
-        handler: async (response) => {
-          try {
-            const verify = await fetch(`${BACKEND}/api/subscription/verify`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ ...response, plan: planKey, userId: user.uid }),
-            });
-            const data = await verify.json();
-            if (verify.ok && data.success) {
-              upgradePlan(planKey);
-              navigate("/main");
-            } else {
-              alert(`Payment verification failed: ${data.msg || "Please contact support."}`);
+      await new Promise((resolve, reject) => {
+        const options = {
+          key: keyId,
+          amount,
+          currency,
+          name: "IntelliQuiz",
+          description: `${PLANS[planKey].label} Plan – ₹${PLANS[planKey].price}/mo`,
+          order_id: orderId,
+          prefill: { email: user.email, name: user.displayName || "" },
+          theme: { color: "#06b6d4" },
+          modal: {
+            ondismiss: () => resolve("dismissed"),
+          },
+          handler: async (response) => {
+            try {
+              const verify = await fetch(`${BACKEND}/api/subscription/verify`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...response, plan: planKey, userId: user.uid }),
+              });
+              const data = await verify.json();
+              if (verify.ok && data.success) {
+                upgradePlan(planKey);
+                resolve("success");
+                navigate("/main");
+              } else {
+                reject(new Error(data.msg || "Payment verification failed."));
+              }
+            } catch (err) {
+              reject(err);
             }
-          } catch {
-            alert("Could not verify payment. Please contact support.");
-          }
-        },
-      };
+          },
+        };
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch {
-      alert("Payment could not be initiated. Please try again.");
+        const rzp = new window.Razorpay(options);
+        rzp.on("payment.failed", (resp) => {
+          reject(new Error(resp?.error?.description || resp?.error?.reason || "Payment failed."));
+        });
+        rzp.open();
+      });
+    } catch (err) {
+      if (err?.message && err.message !== "dismissed") {
+        alert(`Payment error: ${err.message}`);
+      }
     } finally {
       setLoadingPlan(null);
     }

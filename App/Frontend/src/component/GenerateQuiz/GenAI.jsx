@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import SpinnerLoad from "./SpinnerLoad";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getAuth } from "firebase/auth";
@@ -209,6 +210,7 @@ const SourceIcon = ({ source }) => {
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 const GenAI = () => {
+  const navigate = useNavigate();
   const { getLimit, canAccess } = useSubscription();
   const dailyLimit = getLimit("aiQuizzesPerDay");
   const canUploadPdf = canAccess("pdfUpload");
@@ -267,7 +269,7 @@ const GenAI = () => {
     if (dailyLimit === Infinity) return true;
     const data = getUsageData(user.uid);
     if (data.count >= dailyLimit) {
-      alert(`Daily limit of ${dailyLimit} quizzes reached. Come back tomorrow or upgrade your plan!`);
+      navigate("/pricing");
       return false;
     }
     const updated = incrementUsage(user.uid);
@@ -331,7 +333,7 @@ const GenAI = () => {
     }
 
     if (!canUploadPdf && getYtCount(user.uid) >= YT_FREE_LIMIT) {
-      alert(`You've used all ${YT_FREE_LIMIT} free YouTube quiz generations. Upgrade to Pro for unlimited access.`);
+      navigate("/pricing");
       return;
     }
 
@@ -395,7 +397,7 @@ const GenAI = () => {
     if (!canUploadPdf) {
       const used = getPdfCount(user.uid);
       if (used >= PDF_FREE_LIMIT) {
-        alert(`You've used all ${PDF_FREE_LIMIT} free PDF quiz generations. Upgrade to Pro for unlimited access.`);
+        navigate("/pricing");
         return;
       }
     }
