@@ -164,7 +164,7 @@ const MCQTest = () => {
         <section className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
           <div>
             <h1 className="max-w-4xl text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
-              Practice in a real enterprise assessment environment.
+              Practice in a real assessment environment.
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-8 text-slate-300 sm:text-lg">
               Build placement readiness with proctored-style modules, AI-guided
@@ -321,7 +321,7 @@ const MCQTest = () => {
           </div>
         </section>
 
-        <section className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        {/* <section className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {sections.map((section) => {
             const Icon = section.icon;
             return (
@@ -349,7 +349,7 @@ const MCQTest = () => {
               </div>
             );
           })}
-        </section>
+        </section> */}
       </div>
     </main>
   );
