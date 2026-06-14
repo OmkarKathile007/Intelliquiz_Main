@@ -43,7 +43,9 @@ const Navbar = () => {
             
             {firebase.isLoggedIn ? (
               <li>
-                <CgProfile className="w-7 h-7 sm:w-8 sm:h-8 cursor-pointer hover:text-sky-400 transition-colors" />
+                <Link to="/profile">
+                  <CgProfile className="w-7 h-7 sm:w-8 sm:h-8 cursor-pointer hover:text-sky-400 transition-colors" />
+                </Link>
               </li>
             ) : (
               <li className="ml-4">
@@ -104,7 +106,9 @@ const Navbar = () => {
           <li className="w-full text-center mt-2 px-4">
             {firebase.isLoggedIn ? (
               <div className="flex justify-center">
-                <CgProfile className="w-9 h-9 sm:w-10 sm:h-10 cursor-pointer hover:text-sky-400 p-1.5" />
+                <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
+                  <CgProfile className="w-9 h-9 sm:w-10 sm:h-10 cursor-pointer hover:text-sky-400 p-1.5" />
+                </Link>
               </div>
             ) : (
               <Link

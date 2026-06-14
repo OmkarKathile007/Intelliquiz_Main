@@ -22,6 +22,7 @@ const dashboardRoutes    = require("./routes/dashboard");
 const subscriptionRoutes = require("./routes/subscription");
 const quizRoutes         = require("./routes/quiz");
 const transcriptRoutes   = require("./routes/transcript");
+const profileRoutes      = require("./routes/profile");
 const Stats = require("./models/Stats");
 
 const app = express();
@@ -44,6 +45,7 @@ app.use("/dashboard/api",    dashboardRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use("/quiz/api",         quizRoutes);
 app.use("/api/transcript",   transcriptRoutes);
+app.use("/api/profile",      profileRoutes);
 
 app.get("/dashboard/api/stats/:playerId", async (req, res) => {
   try {

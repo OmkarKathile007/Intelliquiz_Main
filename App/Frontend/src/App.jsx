@@ -73,6 +73,7 @@ import Contact from "./component/Contact/Contact";
 import ProtectedRoute from "../utils/ProtectedRoutes";
 import Dashboard from "./Tabs/DashBoard/Dashboard";
 import Pricing from "./pages/Pricing";
+import Profile from "./pages/Profile";
 import { SubscriptionProvider } from "./context/SubscriptionContext";
 
 function App() {
@@ -96,6 +97,7 @@ function App() {
             <Route path="mcqtest/DSA_fundamentals" element={<DSAfundamentals />} />
             <Route path="mcqtest/Online_Assessment" element={<OA />} />
             <Route path="mcqtest/userdashboard" element={<UserDashBoard />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
         </Routes>
       </BrowserRouter>

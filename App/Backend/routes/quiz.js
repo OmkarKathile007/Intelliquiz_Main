@@ -1,6 +1,46 @@
 const express = require('express');
 const router = express.Router();
 const QuizAttempt = require('../models/QuizAttempt');
+const UserProfile = require('../models/UserProfile');
+
+async function updateStreak(userId) {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const profile = await UserProfile.findOne({ userId });
+
+  if (profile && profile.streaks.lastActiveDate === todayStr) return;
+
+  const history = profile ? [...profile.streaks.history] : [];
+  if (!history.includes(todayStr)) history.push(todayStr);
+
+  const sorted = [...history].sort((a, b) => b.localeCompare(a));
+  const yesterday = new Date(Date.now() - 86_400_000).toISOString().split('T')[0];
+
+  let currentStreak = 0;
+  let checkDate = (sorted[0] === todayStr || sorted[0] === yesterday) ? sorted[0] : null;
+  if (checkDate) {
+    for (const d of sorted) {
+      if (d === checkDate) {
+        currentStreak++;
+        checkDate = new Date(new Date(checkDate).getTime() - 86_400_000).toISOString().split('T')[0];
+      } else break;
+    }
+  }
+
+  const longestStreak = Math.max(profile?.streaks?.longestStreak ?? 0, currentStreak);
+
+  await UserProfile.findOneAndUpdate(
+    { userId },
+    {
+      $set: {
+        'streaks.lastActiveDate': todayStr,
+        'streaks.currentStreak': currentStreak,
+        'streaks.longestStreak': longestStreak,
+      },
+      $addToSet: { 'streaks.history': todayStr },
+    },
+    { upsert: true }
+  );
+}
 
 // POST /quiz/api/submit — save a completed quiz attempt
 router.post('/submit', async (req, res) => {
@@ -12,6 +52,7 @@ router.post('/submit', async (req, res) => {
     const attempt = await QuizAttempt.create({
       userId, quizId, quizTitle, score, total, accuracy, timeTaken, warnings,
     });
+    updateStreak(userId).catch(e => console.error('[streak-update]', e.message));
     res.status(201).json(attempt);
   } catch (err) {
     console.error(err);
