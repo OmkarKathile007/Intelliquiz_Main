@@ -42,8 +42,8 @@ router.post("/create-order", async (req, res) => {
       keyId:    process.env.RAZORPAY_KEY_ID,
     });
   } catch (err) {
-    console.error("Razorpay order error:", err);
-    res.status(500).json({ msg: "Failed to create payment order." });
+    console.error("Razorpay order error:", err?.error || err?.message || err);
+    res.status(500).json({ msg: "Failed to create payment order.", detail: err?.error?.description || err?.message });
   }
 });
 
