@@ -5,7 +5,7 @@ import AIimage from '../../assets/AI-Image.png';
 const AI_img = () => {
   return (
     <div>
-        <img className='shadow-lg shadow-white size-96' src={AIimage} alt="" />
+        <img className='shadow-lg shadow-white size-96' src={AIimage} alt="image for the AI" />
     </div>
   )
 }

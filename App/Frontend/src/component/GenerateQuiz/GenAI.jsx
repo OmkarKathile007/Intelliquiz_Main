@@ -1,264 +1,32 @@
-// import React, { useState } from 'react';
-// import SpinnerLoad from './SpinnerLoad';
-// import { GoogleGenerativeAI } from "@google/generative-ai";
-// import { getAuth } from "firebase/auth";
-
-// const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-// const genAI = new GoogleGenerativeAI(API_KEY);
-
-// const QUIZ_LIMIT = 5;
-
-// // --- Helper: Exponential Backoff Retry Logic ---
-// async function sendMessageWithRetry(chatSession, prompt, retries = 3, delay = 2000) {
-//   try {
-//     return await chatSession.sendMessage(prompt);
-//   } catch (error) {
-//     // Check if the error is a Quota/Rate Limit error (429) or Server Error (503)
-//     const isRetryable = error.message.includes("429") || error.message.includes("503");
-
-//     if (retries > 0 && isRetryable) {
-//       console.warn(`Quota hit. Retrying in ${delay}ms... (Attempts left: ${retries})`);
-      
-//       // Wait for the specified delay
-//       await new Promise((resolve) => setTimeout(resolve, delay));
-      
-//       // Retry with double the delay (2s -> 4s -> 8s)
-//       return sendMessageWithRetry(chatSession, prompt, retries - 1, delay * 2);
-//     } else {
-//       // No retries left or non-retryable error
-//       throw error;
-//     }
-//   }
-// }
-
-// function getTodayDateString() {
-//   return new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
-// }
-
-// // Insecure client‑side limit using localStorage
-// function canGenerateQuiz(uid) {
-//   const key = `quizLimit_${uid}`;
-//   const today = getTodayDateString();
-//   const raw = localStorage.getItem(key);
-//   let data = raw ? JSON.parse(raw) : { date: today, count: 0 };
-
-//   if (data.date !== today) {
-//     data = { date: today, count: 0 };
-//   }
-
-//   if (data.count < QUIZ_LIMIT) {
-//     data.count += 1;
-//     localStorage.setItem(key, JSON.stringify(data));
-//     return { allowed: true, remaining: QUIZ_LIMIT - data.count };
-//   } else {
-//     return { allowed: false, remaining: 0 };
-//   }
-// }
-
-// const GenAI = () => {
-//   const [paragraph, setParagraph] = useState("");
-//   const [status, setStatus] = useState("idle"); // "idle", "loading", "playing", "finished"
-//   const [mcqs, setMcqs] = useState([]);
-//   const [currentIndex, setCurrentIndex] = useState(0);
-//   const [score, setScore] = useState(0);
-//   const [remaining, setRemaining] = useState(QUIZ_LIMIT);
-
-//   const generateQuiz = async () => {
-//     const auth = getAuth();
-//     const user = auth.currentUser;
-//     if (!user) {
-//       alert("Please log in first");
-//       return;
-//     }
-
-//     // Check limits BEFORE calling the API
-//     const rawLimitCheck = canGenerateQuiz(user.uid);
-//     if (!rawLimitCheck.allowed) {
-//       alert("Daily limit reached! Come back tomorrow.");
-//       setRemaining(0);
-//       return;
-//     }
-    
-//     // Note: We only decrement the UI counter if the generation actually succeeds 
-//     // to be fair to users, but your current logic decrements it on attempt.
-//     // I kept your logic as-is, just updating the state.
-//     setRemaining(rawLimitCheck.remaining);
-
-//     if (!paragraph.trim()) {
-//       alert("Please enter a valid paragraph.");
-//       return;
-//     }
-
-//     setStatus("loading");
-//     try {
-//       // double check your model name here. 
-//       // Use "gemini-1.5-flash" or "gemini-2.0-flash-exp" if 2.5 fails.
-//       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); 
-      
-//       const generationConfig = { 
-//         temperature: 1, 
-//         topP: 0.95, 
-//         topK: 40, 
-//         maxOutputTokens: 8192,
-//         responseMimeType: "application/json" // Force JSON mode for better stability
-//       };
-      
-//       const chatSession = model.startChat({ generationConfig, history: [] });
-
-//       const prompt = `You are an assistant that creates multiple-choice quizzes from a given paragraph. Output valid JSON only in this format:\n{\n  \"mcqs\": [ ... ]\n}\nParagraph: \"${paragraph}\"`;
-
-//       // --- NEW: USE THE RETRY FUNCTION ---
-//       const result = await sendMessageWithRetry(chatSession, prompt);
-      
-//       const text = result.response.text();
-      
-//       // Cleanup JSON: Sometimes models return markdown blocks (```json ... ```)
-//       // This regex extracts purely the JSON object/array
-//       const jsonMatch = text.match(/\{[\s\S]*\}/);
-//       const jsonString = jsonMatch ? jsonMatch[0] : text;
-      
-//       const data = JSON.parse(jsonString);
-
-//       setMcqs(
-//         data.mcqs.map((q) => ({
-//           question: q.mcq || q.question || "",
-//           options: q.options,
-//           correct: q.correct,
-//         }))
-//       );
-//       setCurrentIndex(0);
-//       setScore(0);
-//       setStatus("playing");
-//     } catch (error) {
-//       console.error("Error generating quiz:", error);
-//       alert("Failed to generate quiz (Server might be busy). Please try again.");
-//       setStatus("idle");
-//     }
-//   };
-
-//   const handleAnswer = (key) => {
-//     const current = mcqs[currentIndex];
-//     if (key === current.correct) {
-//       setScore((prev) => prev + 1);
-//     }
-//     const next = currentIndex + 1;
-//     if (next < mcqs.length) {
-//       setCurrentIndex(next);
-//     } else {
-//       setStatus("finished");
-//     }
-//   };
-
-//   const reset = () => {
-//     setParagraph("");
-//     setMcqs([]);
-//     setCurrentIndex(0);
-//     setScore(0);
-//     setStatus("idle");
-//     // We don't reset 'remaining' here because it persists for the day
-//   };
-
-//   // ... (Rest of your UI render code remains exactly the same)
-//   if (status === "idle") {
-//     return (
-//       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white flex items-center justify-center p-4">
-//         <div className="w-full max-w-2xl">
-//           <h1 className="text-3xl md:text-5xl font-bold mb-8 text-center">Paste Your Paragraph</h1>
-//           <textarea
-//             className="w-full bg-transparent p-4 border-2 border-gray-300 rounded-lg text-white mb-6"
-//             value={paragraph}
-//             onChange={(e) => setParagraph(e.target.value)}
-//             rows={8}
-//             placeholder="Enter your content here..."
-//           />
-//           <button
-//             className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-md font-semibold"
-//             onClick={generateQuiz}
-//           >
-//             Generate Quiz
-//           </button>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   if (status === "loading") {
-//     return (
-//       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
-//         <SpinnerLoad />
-//       </div>
-//     );
-//   }
-
-//   if (status === "playing") {
-//     const { question, options } = mcqs[currentIndex];
-//     return (
-//       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white flex items-center justify-center p-4">
-//         <div className="w-full max-w-2xl bg-gray-800 bg-opacity-80 rounded-xl shadow-lg p-6">
-//           <div className="flex justify-between mb-4">
-//             <span className="text-sm font-medium">Score: {score}</span>
-//             <span className="text-sm font-medium">Remaining: {remaining}</span>
-//           </div>
-//           <h2 className="text-xl font-semibold mb-4">
-//             Question {currentIndex + 1} of {mcqs.length}
-//           </h2>
-//           <p className="text-lg mb-6">{question}</p>
-//           <div className="grid grid-cols-1 gap-4">
-//             {Object.entries(options).map(([key, text], index) => (
-//               <button
-//                 key={key}
-//                 className="w-full text-left px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-md"
-//                 onClick={() => handleAnswer(key)}
-//               >
-//                 <span className="font-bold uppercase mr-2">{index + 1}.</span>
-//                 {text}
-//               </button>
-//             ))}
-//           </div>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white flex items-center justify-center p-4">
-//       <div className="w-full max-w-md bg-gray-800 bg-opacity-80 rounded-xl shadow-lg p-6 text-center">
-//         <h2 className="text-2xl font-semibold mb-4">Quiz Completed!</h2>
-//         <p className="text-lg mb-6">
-//           Your Score: {score} / {mcqs.length}
-//         </p>
-//         <button
-//           className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-md font-semibold"
-//           onClick={reset}
-//         >
-//           Create Another Quiz
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default GenAI;
-
-
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import SpinnerLoad from "./SpinnerLoad";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getAuth } from "firebase/auth";
 import { useSubscription } from "../../context/SubscriptionContext";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const BACKEND = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL || "http://localhost:5000";
 const genAI = new GoogleGenerativeAI(API_KEY);
 
-// --- Retry with exponential backoff ---
-async function sendWithRetry(chatSession, prompt, retries = 3, delay = 2000) {
+const TEXT_CHAR_LIMIT = 3000;
+const PDF_SIZE_LIMIT_MB = 5;
+const PDF_SIZE_LIMIT = PDF_SIZE_LIMIT_MB * 1024 * 1024;
+const HISTORY_MAX = 3;
+const PDF_FREE_LIMIT = 2;
+const YT_FREE_LIMIT = 2;
+
+const YT_URL_RE = /(?:youtube\.com\/watch|youtu\.be\/|youtube\.com\/embed\/)/i;
+
+// ── Utilities ──────────────────────────────────────────────────────────────────
+
+async function sendWithRetry(fn, retries = 3, delay = 2000) {
   try {
-    return await chatSession.sendMessage(prompt);
+    return await fn();
   } catch (err) {
     const retryable = err.message?.includes("429") || err.message?.includes("503");
     if (retries > 0 && retryable) {
       await new Promise((r) => setTimeout(r, delay));
-      return sendWithRetry(chatSession, prompt, retries - 1, delay * 2);
+      return sendWithRetry(fn, retries - 1, delay * 2);
     }
     throw err;
   }
@@ -282,7 +50,104 @@ function incrementUsage(uid) {
   return data;
 }
 
-// Progress ring component
+function historyKey(uid) {
+  return `iq_quiz_history_${uid}`;
+}
+
+function loadHistory(uid) {
+  try {
+    const raw = localStorage.getItem(historyKey(uid));
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function pushToHistory(uid, entry) {
+  let hist = loadHistory(uid).filter((h) => h.id !== entry.id);
+  hist.unshift(entry);
+  hist = hist.slice(0, HISTORY_MAX);
+  localStorage.setItem(historyKey(uid), JSON.stringify(hist));
+  return hist;
+}
+
+function getPdfCount(uid) {
+  return parseInt(localStorage.getItem(`iq_pdf_count_${uid}`) || "0", 10);
+}
+
+function incrementPdfCount(uid) {
+  const next = getPdfCount(uid) + 1;
+  localStorage.setItem(`iq_pdf_count_${uid}`, String(next));
+  return next;
+}
+
+function getYtCount(uid) {
+  return parseInt(localStorage.getItem(`iq_yt_count_${uid}`) || "0", 10);
+}
+
+function incrementYtCount(uid) {
+  const next = getYtCount(uid) + 1;
+  localStorage.setItem(`iq_yt_count_${uid}`, String(next));
+  return next;
+}
+
+async function uploadPdfToGemini(file) {
+  const meta = JSON.stringify({
+    file: { display_name: file.name, mime_type: "application/pdf" },
+  });
+  const metaBlob = new Blob([meta], { type: "application/json" });
+  const form = new FormData();
+  form.append("metadata", metaBlob);
+  form.append("file", file, file.name);
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=multipart&key=${API_KEY}`,
+    { method: "POST", body: form }
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || "PDF upload failed.");
+  }
+  return (await res.json()).file;
+}
+
+function parseMcqs(text) {
+  const match = text.match(/\{[\s\S]*\}/);
+  const data = JSON.parse(match ? match[0] : text);
+  const normalized = (data.mcqs || [])
+    .filter((q) => Array.isArray(q.options) && q.options.length === 4)
+    .map((q) => ({
+      question: q.question || "",
+      options: q.options,
+      correctIndex: typeof q.correctIndex === "number" ? q.correctIndex : 0,
+    }));
+  if (normalized.length === 0) throw new Error("No valid questions generated.");
+  return normalized;
+}
+
+const QUIZ_PROMPT = `You are a quiz generator. Generate exactly 5 multiple-choice questions from the provided content.
+
+RULES:
+- All questions and answer options MUST be written in English, regardless of the language of the source content
+- Each question must have exactly 4 options
+- Exactly one option must be correct
+- correctIndex must be a 0-based integer (0=A, 1=B, 2=C, 3=D)
+- Questions must be based ONLY on the provided content
+- Output ONLY valid JSON — no markdown, no explanation
+
+OUTPUT FORMAT:
+{
+  "mcqs": [
+    {
+      "question": "...",
+      "options": ["...", "...", "...", "..."],
+      "correctIndex": 0
+    }
+  ]
+}`;
+
+// ── Progress Ring ──────────────────────────────────────────────────────────────
+
 const ProgressRing = ({ value, total }) => {
   const pct = total > 0 ? value / total : 0;
   const r = 28;
@@ -310,100 +175,141 @@ const ProgressRing = ({ value, total }) => {
   );
 };
 
-const GenAI = () => {
-  const { getLimit } = useSubscription();
-  const dailyLimit = getLimit("aiQuizzesPerDay"); // Infinity for paid plans
+// ── Source icon for history entries ───────────────────────────────────────────
 
+const SourceIcon = ({ source }) => {
+  if (source === "pdf") {
+    return (
+      <div className="w-8 h-8 rounded-lg bg-cyan-500/15 flex items-center justify-center shrink-0">
+        <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      </div>
+    );
+  }
+  if (source === "youtube") {
+    return (
+      <div className="w-8 h-8 rounded-lg bg-red-500/15 flex items-center justify-center shrink-0">
+        <svg className="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+        </svg>
+      </div>
+    );
+  }
+  return (
+    <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
+      <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+      </svg>
+    </div>
+  );
+};
+
+// ── Main Component ─────────────────────────────────────────────────────────────
+
+const GenAI = () => {
+  const { getLimit, canAccess } = useSubscription();
+  const dailyLimit = getLimit("aiQuizzesPerDay");
+  const canUploadPdf = canAccess("pdfUpload");
+
+  const [inputMode, setInputMode] = useState("text"); // "text" | "youtube" | "pdf"
   const [paragraph, setParagraph] = useState("");
-  const [status, setStatus] = useState("idle"); // idle | loading | playing | feedback | finished
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [pdfFile, setPdfFile] = useState(null);
+  const [status, setStatus] = useState("idle");
+  const [loadingMsg, setLoadingMsg] = useState("Generating quiz…");
   const [mcqs, setMcqs] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [remaining, setRemaining] = useState(null);
   const [selectedIdx, setSelectedIdx] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
-  const [history, setHistory] = useState([]);
+  const [answerHistory, setAnswerHistory] = useState([]);
+  const [quizHistory, setQuizHistory] = useState([]);
+  const [currentQuizEntry, setCurrentQuizEntry] = useState(null);
+  const [pdfUsed, setPdfUsed] = useState(0);
+  const [ytUsed, setYtUsed] = useState(0);
+  const [historyOpen, setHistoryOpen] = useState(true);
   const feedbackTimer = useRef(null);
+  const fileInputRef = useRef(null);
 
-  // Set initial remaining on mount
   useEffect(() => {
-    const auth = getAuth();
-    const user = auth.currentUser;
+    const user = getAuth().currentUser;
     if (!user) return;
-    if (dailyLimit === Infinity) { setRemaining(Infinity); return; }
-    const data = getUsageData(user.uid);
-    setRemaining(Math.max(0, dailyLimit - data.count));
+    if (dailyLimit === Infinity) {
+      setRemaining(Infinity);
+    } else {
+      const data = getUsageData(user.uid);
+      setRemaining(Math.max(0, dailyLimit - data.count));
+    }
+    setQuizHistory(loadHistory(user.uid));
+    setPdfUsed(getPdfCount(user.uid));
+    setYtUsed(getYtCount(user.uid));
   }, [dailyLimit]);
 
-  const generateQuiz = async () => {
-    const auth = getAuth();
-    const user = auth.currentUser;
+  // ── Start quiz from generated MCQs ────────────────────────────────────────
+
+  function startQuiz(normalized, entry) {
+    setMcqs(normalized);
+    setCurrentIndex(0);
+    setScore(0);
+    setAnswerHistory([]);
+    setSelectedIdx(null);
+    setIsCorrect(null);
+    setCurrentQuizEntry(entry);
+    setStatus("playing");
+  }
+
+  // ── Enforce daily limit ───────────────────────────────────────────────────
+
+  function checkAndIncrementLimit(user) {
+    if (dailyLimit === Infinity) return true;
+    const data = getUsageData(user.uid);
+    if (data.count >= dailyLimit) {
+      alert(`Daily limit of ${dailyLimit} quizzes reached. Come back tomorrow or upgrade your plan!`);
+      return false;
+    }
+    const updated = incrementUsage(user.uid);
+    setRemaining(Math.max(0, dailyLimit - updated.count));
+    return true;
+  }
+
+  // ── Generate from Text ────────────────────────────────────────────────────
+
+  const generateFromText = async () => {
+    const user = getAuth().currentUser;
     if (!user) { alert("Please log in first."); return; }
     if (!paragraph.trim()) { alert("Please enter some text first."); return; }
+    if (!checkAndIncrementLimit(user)) return;
 
-    if (dailyLimit !== Infinity) {
-      const data = getUsageData(user.uid);
-      if (data.count >= dailyLimit) {
-        alert(`Daily limit of ${dailyLimit} quizzes reached. Come back tomorrow or upgrade your plan!`);
-        return;
-      }
-      const updated = incrementUsage(user.uid);
-      setRemaining(Math.max(0, dailyLimit - updated.count));
-    }
-
+    setLoadingMsg("Generating quiz…");
     setStatus("loading");
+
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-      const generationConfig = {
-        temperature: 0.7,
-        topP: 0.9,
-        maxOutputTokens: 4096,
-        responseMimeType: "application/json",
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash",
+        generationConfig: {
+          temperature: 0.7,
+          topP: 0.9,
+          maxOutputTokens: 4096,
+          responseMimeType: "application/json",
+        },
+      });
+      const chatSession = model.startChat({ history: [] });
+      const prompt = `${QUIZ_PROMPT}\n\nCONTENT:\n"${paragraph.slice(0, TEXT_CHAR_LIMIT)}"`;
+      const result = await sendWithRetry(() => chatSession.sendMessage(prompt));
+      const normalized = parseMcqs(result.response.text());
+
+      const entry = {
+        id: Date.now(),
+        title: `Text quiz – ${new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric" })}`,
+        source: "text",
+        mcqs: normalized,
+        date: todayKey(),
       };
-      const chatSession = model.startChat({ generationConfig, history: [] });
-
-      const prompt = `You are a quiz generator. Given the paragraph below, create 5 multiple-choice questions.
-
-RULES:
-- Each question must have exactly 4 options (A, B, C, D)
-- exacty one option must be correct
-- correctIndex must be 0-based integer (0=A, 1=B, 2=C, 3=D)
-- Output ONLY valid JSON, no markdown, no explanation
-
-OUTPUT FORMAT:
-{
-  "mcqs": [
-    {
-      "question": "...",
-      "options": ["...", "...", "...", "..."],
-      "correctIndex": 0
-    }
-  ]
-}
-
-PARAGRAPH:
-"${paragraph.slice(0, 3000)}"`;
-
-      const result = await sendWithRetry(chatSession, prompt);
-      const text = result.response.text();
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      const data = JSON.parse(jsonMatch ? jsonMatch[0] : text);
-
-      const normalized = data.mcqs
-        .filter((q) => Array.isArray(q.options) && q.options.length === 4)
-        .map((q) => ({
-          question: q.question || "",
-          options: q.options,
-          correctIndex: typeof q.correctIndex === "number" ? q.correctIndex : 0,
-        }));
-
-      if (normalized.length === 0) throw new Error("No valid questions generated.");
-
-      setMcqs(normalized);
-      setCurrentIndex(0);
-      setScore(0);
-      setHistory([]);
-      setStatus("playing");
+      setQuizHistory(pushToHistory(user.uid, entry));
+      startQuiz(normalized, entry);
     } catch (err) {
       console.error(err);
       alert("Failed to generate quiz. Please try again.");
@@ -411,20 +317,162 @@ PARAGRAPH:
     }
   };
 
+  // ── Generate from YouTube ─────────────────────────────────────────────────
+
+  const generateFromYoutube = async () => {
+    const user = getAuth().currentUser;
+    if (!user) { alert("Please log in first."); return; }
+
+    const url = youtubeUrl.trim();
+    if (!url) { alert("Please enter a YouTube URL first."); return; }
+    if (!YT_URL_RE.test(url)) {
+      alert("That doesn't look like a YouTube video URL. Please paste a link from youtube.com or youtu.be.");
+      return;
+    }
+
+    if (!canUploadPdf && getYtCount(user.uid) >= YT_FREE_LIMIT) {
+      alert(`You've used all ${YT_FREE_LIMIT} free YouTube quiz generations. Upgrade to Pro for unlimited access.`);
+      return;
+    }
+
+    if (!checkAndIncrementLimit(user)) return;
+
+    setLoadingMsg("Fetching video transcript…");
+    setStatus("loading");
+
+    try {
+      const res = await fetch(`${BACKEND}/api/transcript/youtube`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.msg || "Failed to fetch transcript.");
+
+      setLoadingMsg("Generating quiz…");
+
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash",
+        generationConfig: {
+          temperature: 0.7,
+          topP: 0.9,
+          maxOutputTokens: 4096,
+          responseMimeType: "application/json",
+        },
+      });
+      const chatSession = model.startChat({ history: [] });
+      const prompt = `${QUIZ_PROMPT}\n\nCONTENT:\n"${data.transcript}"`;
+      const result = await sendWithRetry(() => chatSession.sendMessage(prompt));
+      const normalized = parseMcqs(result.response.text());
+
+      const entry = {
+        id: Date.now(),
+        title: `YouTube quiz – ${new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric" })}`,
+        source: "youtube",
+        mcqs: normalized,
+        date: todayKey(),
+      };
+      if (!canUploadPdf) {
+        const newCount = incrementYtCount(user.uid);
+        setYtUsed(newCount);
+      }
+      setQuizHistory(pushToHistory(user.uid, entry));
+      startQuiz(normalized, entry);
+    } catch (err) {
+      console.error(err);
+      alert(`Failed: ${err.message || "Please try again."}`);
+      setStatus("idle");
+    }
+  };
+
+  // ── Generate from PDF ─────────────────────────────────────────────────────
+
+  const generateFromPdf = async () => {
+    const user = getAuth().currentUser;
+    if (!user) { alert("Please log in first."); return; }
+    if (!pdfFile) { alert("Please select a PDF file first."); return; }
+
+    if (!canUploadPdf) {
+      const used = getPdfCount(user.uid);
+      if (used >= PDF_FREE_LIMIT) {
+        alert(`You've used all ${PDF_FREE_LIMIT} free PDF quiz generations. Upgrade to Pro for unlimited access.`);
+        return;
+      }
+    }
+
+    if (!checkAndIncrementLimit(user)) return;
+
+    setLoadingMsg("Uploading PDF…");
+    setStatus("loading");
+
+    try {
+      const uploaded = await uploadPdfToGemini(pdfFile);
+
+      setLoadingMsg("Reading document…");
+
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash",
+        generationConfig: {
+          temperature: 0.7,
+          topP: 0.9,
+          maxOutputTokens: 4096,
+          responseMimeType: "application/json",
+        },
+      });
+
+      const result = await sendWithRetry(() =>
+        model.generateContent([
+          { fileData: { fileUri: uploaded.uri, mimeType: "application/pdf" } },
+          { text: QUIZ_PROMPT },
+        ])
+      );
+
+      const normalized = parseMcqs(result.response.text());
+      const entry = {
+        id: Date.now(),
+        title: `${pdfFile.name.replace(/\.pdf$/i, "")} – ${new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric" })}`,
+        source: "pdf",
+        mcqs: normalized,
+        date: todayKey(),
+      };
+
+      if (!canUploadPdf) {
+        const newCount = incrementPdfCount(user.uid);
+        setPdfUsed(newCount);
+      }
+
+      setQuizHistory(pushToHistory(user.uid, entry));
+      startQuiz(normalized, entry);
+    } catch (err) {
+      console.error(err);
+      alert(`Failed: ${err.message || "Please try again."}`);
+      setStatus("idle");
+    }
+  };
+
+  // ── Replay saved quiz ─────────────────────────────────────────────────────
+
+  const replayQuiz = (entry) => {
+    clearTimeout(feedbackTimer.current);
+    startQuiz(entry.mcqs, entry);
+  };
+
+  // ── Answer handler ────────────────────────────────────────────────────────
+
   const handleAnswer = (idx) => {
     if (status !== "playing") return;
     clearTimeout(feedbackTimer.current);
 
     const current = mcqs[currentIndex];
     const correct = idx === current.correctIndex;
-
     setSelectedIdx(idx);
     setIsCorrect(correct);
     setStatus("feedback");
-
-    const newScore = score + (correct ? 1 : 0);
-    if (correct) setScore(newScore);
-    setHistory((h) => [...h, { question: current.question, selectedIdx: idx, correctIndex: current.correctIndex, correct }]);
+    if (correct) setScore((s) => s + 1);
+    setAnswerHistory((h) => [
+      ...h,
+      { question: current.question, selectedIdx: idx, correctIndex: current.correctIndex, correct },
+    ]);
 
     feedbackTimer.current = setTimeout(() => {
       const next = currentIndex + 1;
@@ -439,45 +487,72 @@ PARAGRAPH:
     }, 1400);
   };
 
+  // ── Reset ─────────────────────────────────────────────────────────────────
+
   const reset = () => {
     clearTimeout(feedbackTimer.current);
     setParagraph("");
+    setYoutubeUrl("");
+    setPdfFile(null);
     setMcqs([]);
     setCurrentIndex(0);
     setScore(0);
-    setHistory([]);
+    setAnswerHistory([]);
     setSelectedIdx(null);
     setIsCorrect(null);
+    setCurrentQuizEntry(null);
     setStatus("idle");
   };
 
+  // ── File handlers ─────────────────────────────────────────────────────────
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > PDF_SIZE_LIMIT) {
+      alert(`PDF must be under ${PDF_SIZE_LIMIT_MB}MB.`);
+      return;
+    }
+    setPdfFile(file);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file?.type === "application/pdf") {
+      if (file.size > PDF_SIZE_LIMIT) { alert(`PDF must be under ${PDF_SIZE_LIMIT_MB}MB.`); return; }
+      setPdfFile(file);
+    }
+  };
+
   // ── IDLE ──────────────────────────────────────────────────────────────────
+
   if (status === "idle") {
+    const headerText = {
+      text:    { main: "Paste Any Text,",    sub: "Paste lecture notes, textbook paragraphs, or any content — we'll turn it into MCQs in seconds." },
+      youtube: { main: "Paste a YouTube Link,", sub: "Drop any educational video URL — we'll pull the transcript and build a quiz from it." },
+      pdf:     { main: "Upload a PDF,",      sub: "Upload your notes or textbook PDF — Gemini reads it natively and generates questions." },
+    }[inputMode];
+
     return (
-      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gray-950 text-white relative">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl" />
         </div>
 
-        <div className="relative w-full max-w-2xl">
-          <div className="text-center mb-10">
-            {/* <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-sm font-medium mb-4">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              AI Quiz Generator
-            </div> */}
+        <div className="relative flex flex-col lg:flex-row gap-0 items-start">
+          <div className="flex-1 min-w-0 w-full lg:order-2 p-4 pt-8">
+          <div className="max-w-2xl mx-auto w-full">
+          {/* Header */}
+          <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold mb-3">
-              Paste Any Text,
-              <br />
+              {headerText.main}<br />
               <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                 Get a Quiz Instantly
               </span>
             </h1>
-            <p className="text-gray-400">
-              Paste lecture notes, textbook paragraphs, or any content, we'll turn it into MCQs in seconds.
-            </p>
+            <p className="text-gray-400 text-sm">{headerText.sub}</p>
             {remaining !== null && remaining !== Infinity && (
               <div className="mt-3 inline-flex items-center gap-2 text-sm text-amber-400">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -488,57 +563,339 @@ PARAGRAPH:
             )}
           </div>
 
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-            <label className="block text-sm font-medium text-gray-400 mb-2">
-              Your text / notes
-            </label>
-            <textarea
-              className="w-full bg-gray-900/60 border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/30 transition resize-none"
-              value={paragraph}
-              onChange={(e) => setParagraph(e.target.value)}
-              rows={8}
-              placeholder="Paste your paragraph, lecture notes, or textbook chapter here..."
-            />
-            <div className="flex items-center justify-between mt-2 mb-4">
-              <span className="text-xs text-gray-600">{paragraph.length} characters</span>
-              <button onClick={() => setParagraph("")} className="text-xs text-gray-500 hover:text-gray-300 transition">
-                Clear
-              </button>
-            </div>
+          {/* Mode Tabs */}
+          <div className="flex bg-white/5 border border-white/10 rounded-xl p-1 mb-4 gap-1">
+            {/* Text */}
             <button
-              onClick={generateQuiz}
-              disabled={!paragraph.trim()}
-              className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl font-semibold text-white transition-all shadow-lg hover:shadow-cyan-500/20"
+              onClick={() => setInputMode("text")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                inputMode === "text"
+                  ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow"
+                  : "text-gray-400 hover:text-gray-200"
+              }`}
             >
-              Generate Quiz →
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+              </svg>
+              Paste Text
+            </button>
+
+            {/* YouTube */}
+            <button
+              onClick={() => setInputMode("youtube")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                inputMode === "youtube"
+                  ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow"
+                  : "text-gray-400 hover:text-gray-200"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+              </svg>
+              YouTube
+              {!canUploadPdf && (
+                <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full">
+                  {Math.max(0, YT_FREE_LIMIT - ytUsed)} left
+                </span>
+              )}
+            </button>
+
+            {/* PDF */}
+            <button
+              onClick={() => setInputMode("pdf")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                inputMode === "pdf"
+                  ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow"
+                  : "text-gray-400 hover:text-gray-200"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              Upload PDF
+              {!canUploadPdf && (
+                <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full">Pro</span>
+              )}
             </button>
           </div>
+
+          {/* Input Card */}
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+            {inputMode === "text" ? (
+              <>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Your text / notes
+                  <span className="ml-2 text-xs text-gray-600">
+                    (only first {TEXT_CHAR_LIMIT.toLocaleString()} chars used)
+                  </span>
+                </label>
+                <textarea
+                  className="w-full bg-gray-900/60 border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/30 transition resize-none"
+                  value={paragraph}
+                  onChange={(e) => setParagraph(e.target.value)}
+                  rows={8}
+                  placeholder="Paste your paragraph, lecture notes, or textbook chapter here..."
+                />
+                <div className="flex items-center justify-between mt-2 mb-4">
+                  <span className={`text-xs ${paragraph.length > TEXT_CHAR_LIMIT ? "text-amber-400" : "text-gray-600"}`}>
+                    {paragraph.length} / {TEXT_CHAR_LIMIT} chars
+                    {paragraph.length > TEXT_CHAR_LIMIT && " — will be trimmed"}
+                  </span>
+                  <button
+                    onClick={() => setParagraph("")}
+                    className="text-xs text-gray-500 hover:text-gray-300 transition"
+                  >
+                    Clear
+                  </button>
+                </div>
+                <button
+                  onClick={generateFromText}
+                  disabled={!paragraph.trim()}
+                  className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl font-semibold text-white transition-all shadow-lg hover:shadow-cyan-500/20"
+                >
+                  Generate Quiz →
+                </button>
+              </>
+            ) : inputMode === "youtube" ? (
+              (!canUploadPdf && ytUsed >= YT_FREE_LIMIT) ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-4 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                    <svg className="w-7 h-7 text-red-400" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold">YouTube quiz limit reached</p>
+                    <p className="text-gray-400 text-sm mt-1">
+                      You've used your {YT_FREE_LIMIT} free YouTube quiz generations. Upgrade to Pro for unlimited access.
+                    </p>
+                  </div>
+                  <a
+                    href="/pricing"
+                    className="px-6 py-2.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 rounded-xl font-semibold text-white text-sm transition-all shadow-lg"
+                  >
+                    Upgrade to Pro →
+                  </a>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-gray-400">
+                      YouTube video URL
+                    </label>
+                    {!canUploadPdf && (
+                      <span className="text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                        {YT_FREE_LIMIT - ytUsed} of {YT_FREE_LIMIT} free uses left
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-red-400">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                      </svg>
+                    </span>
+                    <input
+                      type="url"
+                      className="w-full bg-gray-900/60 border border-white/10 rounded-xl pl-10 pr-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500/30 transition"
+                      value={youtubeUrl}
+                      onChange={(e) => setYoutubeUrl(e.target.value)}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      onKeyDown={(e) => { if (e.key === "Enter") generateFromYoutube(); }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-600 mt-2 mb-5">
+                    Works best with educational videos that have captions enabled. Transcript is fetched server-side.
+                  </p>
+                  <button
+                    onClick={generateFromYoutube}
+                    disabled={!youtubeUrl.trim()}
+                    className="w-full py-3.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl font-semibold text-white transition-all shadow-lg hover:shadow-red-500/20"
+                  >
+                    Generate Quiz from Video →
+                  </button>
+                </>
+              )
+            ) : (canUploadPdf || pdfUsed < PDF_FREE_LIMIT) ? (
+              <>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-medium text-gray-400">
+                    Your PDF file
+                    <span className="ml-2 text-xs text-gray-600">(max {PDF_SIZE_LIMIT_MB} MB)</span>
+                  </label>
+                  {!canUploadPdf && (
+                    <span className="text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                      {PDF_FREE_LIMIT - pdfUsed} of {PDF_FREE_LIMIT} free uses left
+                    </span>
+                  )}
+                </div>
+                {/* Drop zone */}
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleDrop}
+                  onClick={() => !pdfFile && fileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+                    pdfFile
+                      ? "border-cyan-500/50 bg-cyan-500/5"
+                      : "border-white/10 hover:border-cyan-500/30 hover:bg-white/5 cursor-pointer"
+                  }`}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                  {pdfFile ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm font-medium text-white truncate max-w-xs">{pdfFile.name}</p>
+                      <p className="text-xs text-gray-500">{(pdfFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setPdfFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                        className="text-xs text-red-400 hover:text-red-300 transition mt-1"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 text-gray-500">
+                      <svg className="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                      <p className="text-sm">
+                        Drag & drop your PDF here, or{" "}
+                        <span className="text-cyan-400 underline">browse</span>
+                      </p>
+                      <p className="text-xs text-gray-600">PDF files up to {PDF_SIZE_LIMIT_MB} MB</p>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={generateFromPdf}
+                  disabled={!pdfFile}
+                  className="w-full mt-4 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl font-semibold text-white transition-all shadow-lg hover:shadow-cyan-500/20"
+                >
+                  Generate Quiz from PDF →
+                </button>
+              </>
+            ) : (
+              /* Subscription gate */
+              <div className="flex flex-col items-center justify-center py-10 gap-4 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                  <svg className="w-7 h-7 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-white font-semibold">PDF Upload is a Pro feature</p>
+                  <p className="text-gray-400 text-sm mt-1">
+                    Upgrade to Pro or Premium to upload PDFs and generate quizzes from your notes.
+                  </p>
+                </div>
+                <a
+                  href="/pricing"
+                  className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 rounded-xl font-semibold text-white text-sm transition-all shadow-lg"
+                >
+                  Upgrade to Pro →
+                </a>
+              </div>
+            )}
+          </div>
+          </div>
+
+          </div>
+
+          {/* Quiz History Sidebar */}
+          {quizHistory.length > 0 && (
+            <div className="lg:w-64 w-full shrink-0 lg:order-1 lg:pl-4 lg:pr-4 lg:pt-8 lg:border-r lg:border-white/10 lg:min-h-screen">
+              {/* Header with toggle */}
+              <button
+                onClick={() => setHistoryOpen((o) => !o)}
+                className="w-full flex items-center justify-between mb-3 group"
+              >
+                <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-gray-300 transition-colors">
+                  Recent Quizzes
+                  <span className="ml-2 text-gray-600 normal-case font-normal">({quizHistory.length})</span>
+                </h2>
+                <svg
+                  className={`w-4 h-4 text-gray-500 group-hover:text-gray-300 transition-all duration-300 ${historyOpen ? "rotate-0" : "-rotate-180"}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+
+              {/* Collapsible list */}
+              <div
+                className="overflow-hidden transition-all duration-300 ease-in-out"
+                style={{ maxHeight: historyOpen ? `${quizHistory.length * 120}px` : "0px", opacity: historyOpen ? 1 : 0 }}
+              >
+                <div className="space-y-3">
+                  {quizHistory.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="bg-white/5 border border-white/10 rounded-xl px-4 py-3"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <SourceIcon source={entry.source} />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-white truncate">{entry.title}</p>
+                          <p className="text-xs text-gray-500">
+                            {entry.date} &nbsp;·&nbsp; {entry.mcqs.length} questions
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => replayQuiz(entry)}
+                        className="mt-3 w-full px-3 py-1.5 text-xs font-semibold text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/10 rounded-lg transition-all"
+                      >
+                        Play Again
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
   // ── LOADING ────────────────────────────────────────────────────────────────
+
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center gap-4">
         <SpinnerLoad />
+        <p className="text-gray-400 text-sm animate-pulse">{loadingMsg}</p>
       </div>
     );
   }
 
   // ── FINISHED ──────────────────────────────────────────────────────────────
+
   if (status === "finished") {
     const pct = Math.round((score / mcqs.length) * 100);
-    const grade = pct >= 80 ? { label: "Excellent!", color: "text-emerald-400" }
-                : pct >= 60 ? { label: "Good job!", color: "text-cyan-400" }
-                : pct >= 40 ? { label: "Keep practicing!", color: "text-amber-400" }
-                : { label: "Keep going!", color: "text-red-400" };
+    const grade =
+      pct >= 80 ? { label: "Excellent!", color: "text-emerald-400" }
+      : pct >= 60 ? { label: "Good job!", color: "text-cyan-400" }
+      : pct >= 40 ? { label: "Keep practicing!", color: "text-amber-400" }
+      : { label: "Keep going!", color: "text-red-400" };
 
     return (
       <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-4">
         <div className="w-full max-w-lg">
-          {/* Score card */}
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center mb-6">
             <div className="flex items-center justify-center mb-4">
               <div className="relative">
@@ -555,12 +912,16 @@ PARAGRAPH:
             </p>
           </div>
 
-          {/* Answer breakdown */}
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6 space-y-3 max-h-64 overflow-y-auto">
-            <h3 className="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">Answer Breakdown</h3>
-            {history.map((h, i) => (
-              <div key={i} className={`flex items-start gap-3 p-3 rounded-xl border ${h.correct ? "bg-emerald-500/5 border-emerald-500/20" : "bg-red-500/5 border-red-500/20"}`}>
-                <span className={`text-sm font-bold mt-0.5 ${h.correct ? "text-emerald-400" : "text-red-400"}`}>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Answer Breakdown</h3>
+            {answerHistory.map((h, i) => (
+              <div
+                key={i}
+                className={`flex items-start gap-3 p-3 rounded-xl border ${
+                  h.correct ? "bg-emerald-500/5 border-emerald-500/20" : "bg-red-500/5 border-red-500/20"
+                }`}
+              >
+                <span className={`text-sm font-bold mt-0.5 shrink-0 ${h.correct ? "text-emerald-400" : "text-red-400"}`}>
                   {h.correct ? "✓" : "✗"}
                 </span>
                 <div className="text-sm text-gray-300 leading-snug">{h.question}</div>
@@ -568,27 +929,36 @@ PARAGRAPH:
             ))}
           </div>
 
-          <button
-            onClick={reset}
-            className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 rounded-xl font-semibold text-white transition-all shadow-lg"
-          >
-            Create Another Quiz
-          </button>
+          <div className="flex gap-3">
+            {currentQuizEntry && (
+              <button
+                onClick={() => replayQuiz(currentQuizEntry)}
+                className="flex-1 py-3.5 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl font-semibold text-white transition-all"
+              >
+                Play Again
+              </button>
+            )}
+            <button
+              onClick={reset}
+              className="flex-1 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 rounded-xl font-semibold text-white transition-all shadow-lg"
+            >
+              New Quiz
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   // ── PLAYING / FEEDBACK ────────────────────────────────────────────────────
+
   const current = mcqs[currentIndex];
-  const progress = ((currentIndex) / mcqs.length) * 100;
+  const progress = (currentIndex / mcqs.length) * 100;
 
   const optionClass = (idx) => {
     if (status === "feedback") {
-      if (idx === current.correctIndex)
-        return "border-emerald-500 bg-emerald-500/10 text-emerald-300";
-      if (idx === selectedIdx && !isCorrect)
-        return "border-red-500 bg-red-500/10 text-red-300";
+      if (idx === current.correctIndex) return "border-emerald-500 bg-emerald-500/10 text-emerald-300";
+      if (idx === selectedIdx && !isCorrect) return "border-red-500 bg-red-500/10 text-red-300";
       return "border-white/5 bg-white/2 text-gray-500";
     }
     return "border-white/10 bg-white/5 text-gray-200 hover:border-cyan-500/50 hover:bg-cyan-500/5 cursor-pointer";
@@ -597,7 +967,6 @@ PARAGRAPH:
   return (
     <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
-        {/* Header bar */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-sm font-bold">
@@ -613,7 +982,6 @@ PARAGRAPH:
           </div>
         </div>
 
-        {/* Progress bar */}
         <div className="h-1.5 bg-gray-800 rounded-full mb-8 overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full transition-all duration-500"
@@ -621,14 +989,12 @@ PARAGRAPH:
           />
         </div>
 
-        {/* Question card */}
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 mb-5">
           <p className="text-xl md:text-2xl font-semibold leading-relaxed text-white">
             {current.question}
           </p>
         </div>
 
-        {/* Options */}
         <div className="space-y-3">
           {current.options.map((opt, idx) => (
             <button
@@ -655,14 +1021,15 @@ PARAGRAPH:
           ))}
         </div>
 
-        {/* Feedback banner */}
         {status === "feedback" && (
-          <div className={`mt-4 px-5 py-3 rounded-xl border text-sm font-medium transition-all ${
+          <div className={`mt-4 px-5 py-3 rounded-xl border text-sm font-medium ${
             isCorrect
               ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
               : "bg-red-500/10 border-red-500/30 text-red-300"
           }`}>
-            {isCorrect ? "✓ Correct! Well done." : `✗ The correct answer was ${["A", "B", "C", "D"][current.correctIndex]}.`}
+            {isCorrect
+              ? "✓ Correct! Well done."
+              : `✗ The correct answer was ${["A", "B", "C", "D"][current.correctIndex]}.`}
           </div>
         )}
       </div>

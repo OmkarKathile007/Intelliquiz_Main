@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -25,6 +25,7 @@ import {
   Timer,
   Wifi,
 } from "lucide-react";
+import { useFirebase } from "../../context/Firebase";
 import CSfundamental_questions from "../../../../Backend/quizes/CSfundamental";
 import { OAquiz } from "../../../../Backend/quizes/OAquiz";
 import dsaQuiz from "../../../../Backend/quizes/DSAfundamentals";
@@ -55,6 +56,7 @@ const quizConfig = {
 
 export default function Quiz({ id, title }) {
   const navigate = useNavigate();
+  const { user } = useFirebase();
   const selectedQuiz = id === 1 ? CSfundamental_questions : id === 2 ? dsaQuiz : OAquiz;
   const config = { ...quizConfig[id], title: title || quizConfig[id]?.title };
 
@@ -69,6 +71,9 @@ export default function Quiz({ id, title }) {
   const [warnings, setWarnings] = useState(0);
   const [idleSeconds, setIdleSeconds] = useState(0);
   const [warningMessage, setWarningMessage] = useState("");
+
+  // capture timeLeft at submission time so the effect closure gets the right value
+  const timeLeftAtSubmit = useRef(config.duration);
 
   const currentQuestion = selectedQuiz[currentQuestionIndex];
   const answeredCount = Object.keys(selectedAnswers).length;
@@ -151,6 +156,32 @@ export default function Quiz({ id, title }) {
       clearInterval(idleTimer);
     };
   }, []);
+
+  // fire-and-forget: persist the attempt to MongoDB when the quiz ends
+  useEffect(() => {
+    if (!showScore) return;
+    const baseUrl = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL || "http://localhost:5000";
+    const accuracy = Math.round((score / selectedQuiz.length) * 100);
+    fetch(`${baseUrl}/quiz/api/submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId:    user?.uid || "anonymous",
+        quizId:    id,
+        quizTitle: config.title,
+        score,
+        total:     selectedQuiz.length,
+        accuracy,
+        timeTaken: timeLeftAtSubmit.current,
+        warnings,
+      }),
+    }).catch((err) => console.error("Failed to save quiz attempt:", err));
+  }, [showScore]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSubmit = () => {
+    timeLeftAtSubmit.current = config.duration - timeLeft;
+    setShowScore(true);
+  };
 
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60).toString().padStart(2, "0");
@@ -329,7 +360,7 @@ export default function Quiz({ id, title }) {
           total={selectedQuiz.length}
           goToQuestion={goToQuestion}
           toggleReview={toggleReview}
-          onSubmit={() => setShowScore(true)}
+          onSubmit={handleSubmit}
           isCurrentAnswered={selectedAnswers[currentQuestionIndex] !== undefined}
         />
       </div>

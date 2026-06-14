@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { useFirebase } from "./Firebase";
 
 const SubscriptionContext = createContext(null);
+const BACKEND = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL || "http://localhost:5000";
 
 export const PLANS = {
   free: {
@@ -47,8 +48,21 @@ export const SubscriptionProvider = ({ children }) => {
 
   useEffect(() => {
     if (!user) { setPlan("free"); return; }
+
+    // Show cached plan instantly while we verify with server
     const stored = localStorage.getItem(`iq_sub_${user.uid}`);
-    setPlan(stored && PLANS[stored] ? stored : "free");
+    if (stored && PLANS[stored]) setPlan(stored);
+
+    // Sync with backend — source of truth
+    fetch(`${BACKEND}/api/subscription/status/${user.uid}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.plan && PLANS[data.plan]) {
+          setPlan(data.plan);
+          localStorage.setItem(`iq_sub_${user.uid}`, data.plan);
+        }
+      })
+      .catch(() => {}); // fall back to localStorage on network error
   }, [user]);
 
   const upgradePlan = (newPlan) => {

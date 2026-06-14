@@ -85,8 +85,9 @@ export default function Pricing() {
         body: JSON.stringify({ plan: planKey, userId: user.uid }),
       });
 
-      if (!res.ok) throw new Error("Could not create order.");
-      const { orderId, amount, currency, keyId } = await res.json();
+      const orderData = await res.json();
+      if (!res.ok) throw new Error(orderData.detail || orderData.msg || "Could not create order.");
+      const { orderId, amount, currency, keyId } = orderData;
 
       const options = {
         key: keyId,
@@ -98,14 +99,21 @@ export default function Pricing() {
         prefill: { email: user.email, name: user.displayName || "" },
         theme: { color: "#06b6d4" },
         handler: async (response) => {
-          const verify = await fetch(`${BACKEND}/api/subscription/verify`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...response, plan: planKey, userId: user.uid }),
-          });
-          if (verify.ok) {
-            upgradePlan(planKey);
-            navigate("/main");
+          try {
+            const verify = await fetch(`${BACKEND}/api/subscription/verify`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...response, plan: planKey, userId: user.uid }),
+            });
+            const data = await verify.json();
+            if (verify.ok && data.success) {
+              upgradePlan(planKey);
+              navigate("/main");
+            } else {
+              alert(`Payment verification failed: ${data.msg || "Please contact support."}`);
+            }
+          } catch {
+            alert("Could not verify payment. Please contact support.");
           }
         },
       };
