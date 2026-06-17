@@ -49,6 +49,8 @@ app.use("/api/transcript",   transcriptRoutes);
 app.use("/api/gemini",       geminiRoutes);
 app.use("/api/profile",      profileRoutes);
 
+app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
+
 app.get("/dashboard/api/stats/:playerId", async (req, res) => {
   try {
     const stats = await Stats.findOne({ player: req.params.playerId });
