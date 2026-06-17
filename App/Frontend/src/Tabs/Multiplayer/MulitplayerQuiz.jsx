@@ -218,48 +218,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import io from "socket.io-client";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import ConfettiAnimation from "../../component/magicui/ConfettiAnimation";
 import ScoreBoard from "./ScoreBoard";
 
+const BACKEND = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL || "http://localhost:5000";
 const socket = io(import.meta.env.VITE_REACT_APP_BACKEND_BASEURL, { autoConnect: true });
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function generateMultiplayerQuestions(topic, count) {
-  const model = genAI.getGenerativeModel({
-    model: "gemini-3.5-flash",
-    generationConfig: { temperature: 0.8, responseMimeType: "application/json" },
+  const res = await fetch(`${BACKEND}/api/gemini/generate/multiplayer`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ topic, count }),
   });
-
-  const prompt = `Generate exactly ${count} multiple-choice quiz questions about "${topic}".
-
-RULES:
-- Each question must have exactly 4 answer options
-- Exactly ONE answer must be correct (correct: true), the rest false
-- Questions should be challenging but fair
-- Output ONLY valid JSON, no markdown, no explanation
-
-OUTPUT FORMAT:
-{
-  "questions": [
-    {
-      "question": "...",
-      "answers": [
-        {"text": "...", "correct": true},
-        {"text": "...", "correct": false},
-        {"text": "...", "correct": false},
-        {"text": "...", "correct": false}
-      ]
-    }
-  ]
-}`;
-
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  const data = JSON.parse(jsonMatch ? jsonMatch[0] : text);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.msg || "Failed to generate questions.");
   return data.questions;
 }
 

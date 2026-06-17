@@ -1,37 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import SpinnerLoad from "./SpinnerLoad";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getAuth } from "firebase/auth";
 import { useSubscription } from "../../context/SubscriptionContext";
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const BACKEND = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL || "http://localhost:5000";
-const genAI = new GoogleGenerativeAI(API_KEY);
 
 const TEXT_CHAR_LIMIT = 3000;
 const PDF_SIZE_LIMIT_MB = 5;
 const PDF_SIZE_LIMIT = PDF_SIZE_LIMIT_MB * 1024 * 1024;
 const HISTORY_MAX = 3;
-const PDF_FREE_LIMIT = 2;
-const YT_FREE_LIMIT = 2;
 
 const YT_URL_RE = /(?:youtube\.com\/watch|youtu\.be\/|youtube\.com\/embed\/)/i;
 
 // ── Utilities ──────────────────────────────────────────────────────────────────
-
-async function sendWithRetry(fn, retries = 3, delay = 2000) {
-  try {
-    return await fn();
-  } catch (err) {
-    const retryable = err.message?.includes("429") || err.message?.includes("503");
-    if (retries > 0 && retryable) {
-      await new Promise((r) => setTimeout(r, delay));
-      return sendWithRetry(fn, retries - 1, delay * 2);
-    }
-    throw err;
-  }
-}
 
 function todayKey() {
   return new Date().toISOString().slice(0, 10);
@@ -91,61 +73,6 @@ function incrementYtCount(uid) {
   localStorage.setItem(`iq_yt_count_${uid}`, String(next));
   return next;
 }
-
-async function uploadPdfToGemini(file) {
-  const meta = JSON.stringify({
-    file: { display_name: file.name, mime_type: "application/pdf" },
-  });
-  const metaBlob = new Blob([meta], { type: "application/json" });
-  const form = new FormData();
-  form.append("metadata", metaBlob);
-  form.append("file", file, file.name);
-
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=multipart&key=${API_KEY}`,
-    { method: "POST", body: form }
-  );
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error?.message || "PDF upload failed.");
-  }
-  return (await res.json()).file;
-}
-
-function parseMcqs(text) {
-  const match = text.match(/\{[\s\S]*\}/);
-  const data = JSON.parse(match ? match[0] : text);
-  const normalized = (data.mcqs || [])
-    .filter((q) => Array.isArray(q.options) && q.options.length === 4)
-    .map((q) => ({
-      question: q.question || "",
-      options: q.options,
-      correctIndex: typeof q.correctIndex === "number" ? q.correctIndex : 0,
-    }));
-  if (normalized.length === 0) throw new Error("No valid questions generated.");
-  return normalized;
-}
-
-const QUIZ_PROMPT = `You are a quiz generator. Generate exactly 5 multiple-choice questions from the provided content.
-
-RULES:
-- All questions and answer options MUST be written in English, regardless of the language of the source content
-- Each question must have exactly 4 options
-- Exactly one option must be correct
-- correctIndex must be a 0-based integer (0=A, 1=B, 2=C, 3=D)
-- Questions must be based ONLY on the provided content
-- Output ONLY valid JSON — no markdown, no explanation
-
-OUTPUT FORMAT:
-{
-  "mcqs": [
-    {
-      "question": "...",
-      "options": ["...", "...", "...", "..."],
-      "correctIndex": 0
-    }
-  ]
-}`;
 
 // ── Progress Ring ──────────────────────────────────────────────────────────────
 
@@ -211,9 +138,9 @@ const SourceIcon = ({ source }) => {
 
 const GenAI = () => {
   const navigate = useNavigate();
-  const { getLimit, canAccess } = useSubscription();
+  const { getLimit } = useSubscription();
   const dailyLimit = getLimit("aiQuizzesPerDay");
-  const canUploadPdf = canAccess("pdfUpload");
+  const pdfYtLimit = getLimit("pdfUpload");
 
   const [inputMode, setInputMode] = useState("text"); // "text" | "youtube" | "pdf"
   const [paragraph, setParagraph] = useState("");
@@ -289,29 +216,23 @@ const GenAI = () => {
     setStatus("loading");
 
     try {
-      const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash",
-        generationConfig: {
-          temperature: 0.7,
-          topP: 0.9,
-          maxOutputTokens: 4096,
-          responseMimeType: "application/json",
-        },
+      const res = await fetch(`${BACKEND}/api/gemini/generate/text`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: paragraph.slice(0, TEXT_CHAR_LIMIT) }),
       });
-      const chatSession = model.startChat({ history: [] });
-      const prompt = `${QUIZ_PROMPT}\n\nCONTENT:\n"${paragraph.slice(0, TEXT_CHAR_LIMIT)}"`;
-      const result = await sendWithRetry(() => chatSession.sendMessage(prompt));
-      const normalized = parseMcqs(result.response.text());
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.msg || "Generation failed.");
 
       const entry = {
         id: Date.now(),
         title: `Text quiz – ${new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric" })}`,
         source: "text",
-        mcqs: normalized,
+        mcqs: data.mcqs,
         date: todayKey(),
       };
       setQuizHistory(pushToHistory(user.uid, entry));
-      startQuiz(normalized, entry);
+      startQuiz(data.mcqs, entry);
     } catch (err) {
       console.error(err);
       alert("Failed to generate quiz. Please try again.");
@@ -332,54 +253,36 @@ const GenAI = () => {
       return;
     }
 
-    if (!canUploadPdf && getYtCount(user.uid) >= YT_FREE_LIMIT) {
+    if (getYtCount(user.uid) >= pdfYtLimit) {
       navigate("/pricing");
       return;
     }
 
     if (!checkAndIncrementLimit(user)) return;
 
-    setLoadingMsg("Fetching video transcript…");
+    setLoadingMsg("Generating quiz from video…");
     setStatus("loading");
 
     try {
-      const res = await fetch(`${BACKEND}/api/transcript/youtube`, {
+      const res = await fetch(`${BACKEND}/api/gemini/generate/youtube`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.msg || "Failed to fetch transcript.");
-
-      setLoadingMsg("Generating quiz…");
-
-      const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash",
-        generationConfig: {
-          temperature: 0.7,
-          topP: 0.9,
-          maxOutputTokens: 4096,
-          responseMimeType: "application/json",
-        },
-      });
-      const chatSession = model.startChat({ history: [] });
-      const prompt = `${QUIZ_PROMPT}\n\nCONTENT:\n"${data.transcript}"`;
-      const result = await sendWithRetry(() => chatSession.sendMessage(prompt));
-      const normalized = parseMcqs(result.response.text());
+      if (!res.ok) throw new Error(data.msg || "Failed to generate quiz from video.");
 
       const entry = {
         id: Date.now(),
         title: `YouTube quiz – ${new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric" })}`,
         source: "youtube",
-        mcqs: normalized,
+        mcqs: data.mcqs,
         date: todayKey(),
       };
-      if (!canUploadPdf) {
-        const newCount = incrementYtCount(user.uid);
-        setYtUsed(newCount);
-      }
+      const newCount = incrementYtCount(user.uid);
+      setYtUsed(newCount);
       setQuizHistory(pushToHistory(user.uid, entry));
-      startQuiz(normalized, entry);
+      startQuiz(data.mcqs, entry);
     } catch (err) {
       console.error(err);
       alert(`Failed: ${err.message || "Please try again."}`);
@@ -394,57 +297,41 @@ const GenAI = () => {
     if (!user) { alert("Please log in first."); return; }
     if (!pdfFile) { alert("Please select a PDF file first."); return; }
 
-    if (!canUploadPdf) {
-      const used = getPdfCount(user.uid);
-      if (used >= PDF_FREE_LIMIT) {
-        navigate("/pricing");
-        return;
-      }
+    const used = getPdfCount(user.uid);
+    if (used >= pdfYtLimit) {
+      navigate("/pricing");
+      return;
     }
 
     if (!checkAndIncrementLimit(user)) return;
 
-    setLoadingMsg("Uploading PDF…");
+    setLoadingMsg("Generating quiz from PDF…");
     setStatus("loading");
 
     try {
-      const uploaded = await uploadPdfToGemini(pdfFile);
+      const form = new FormData();
+      form.append("pdf", pdfFile, pdfFile.name);
 
-      setLoadingMsg("Reading document…");
-
-      const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash",
-        generationConfig: {
-          temperature: 0.7,
-          topP: 0.9,
-          maxOutputTokens: 4096,
-          responseMimeType: "application/json",
-        },
+      const res = await fetch(`${BACKEND}/api/gemini/generate/pdf`, {
+        method: "POST",
+        body: form,
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.msg || "Failed to generate quiz from PDF.");
 
-      const result = await sendWithRetry(() =>
-        model.generateContent([
-          { fileData: { fileUri: uploaded.uri, mimeType: "application/pdf" } },
-          { text: QUIZ_PROMPT },
-        ])
-      );
-
-      const normalized = parseMcqs(result.response.text());
       const entry = {
         id: Date.now(),
         title: `${pdfFile.name.replace(/\.pdf$/i, "")} – ${new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric" })}`,
         source: "pdf",
-        mcqs: normalized,
+        mcqs: data.mcqs,
         date: todayKey(),
       };
 
-      if (!canUploadPdf) {
-        const newCount = incrementPdfCount(user.uid);
-        setPdfUsed(newCount);
-      }
+      const newCount = incrementPdfCount(user.uid);
+      setPdfUsed(newCount);
 
       setQuizHistory(pushToHistory(user.uid, entry));
-      startQuiz(normalized, entry);
+      startQuiz(data.mcqs, entry);
     } catch (err) {
       console.error(err);
       alert(`Failed: ${err.message || "Please try again."}`);
@@ -595,11 +482,9 @@ const GenAI = () => {
                 <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
               </svg>
               YouTube
-              {!canUploadPdf && (
-                <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full">
-                  {Math.max(0, YT_FREE_LIMIT - ytUsed)} left
-                </span>
-              )}
+              <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full">
+                {Math.max(0, pdfYtLimit - ytUsed)} left
+              </span>
             </button>
 
             {/* PDF */}
@@ -616,9 +501,9 @@ const GenAI = () => {
                   d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
               Upload PDF
-              {!canUploadPdf && (
-                <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full">Pro</span>
-              )}
+              <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full">
+                {Math.max(0, pdfYtLimit - pdfUsed)} left
+              </span>
             </button>
           </div>
 
@@ -660,7 +545,7 @@ const GenAI = () => {
                 </button>
               </>
             ) : inputMode === "youtube" ? (
-              (!canUploadPdf && ytUsed >= YT_FREE_LIMIT) ? (
+              (ytUsed >= pdfYtLimit) ? (
                 <div className="flex flex-col items-center justify-center py-10 gap-4 text-center">
                   <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
                     <svg className="w-7 h-7 text-red-400" fill="currentColor" viewBox="0 0 24 24">
@@ -670,7 +555,7 @@ const GenAI = () => {
                   <div>
                     <p className="text-white font-semibold">YouTube quiz limit reached</p>
                     <p className="text-gray-400 text-sm mt-1">
-                      You've used your {YT_FREE_LIMIT} free YouTube quiz generations. Upgrade to Pro for unlimited access.
+                      You've used your {pdfYtLimit} YouTube quiz generations. Upgrade for more.
                     </p>
                   </div>
                   <a
@@ -686,11 +571,9 @@ const GenAI = () => {
                     <label className="text-sm font-medium text-gray-400">
                       YouTube video URL
                     </label>
-                    {!canUploadPdf && (
-                      <span className="text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
-                        {YT_FREE_LIMIT - ytUsed} of {YT_FREE_LIMIT} free uses left
-                      </span>
-                    )}
+                    <span className="text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                      {Math.max(0, pdfYtLimit - ytUsed)} of {pdfYtLimit} uses left
+                    </span>
                   </div>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-red-400">
@@ -719,18 +602,16 @@ const GenAI = () => {
                   </button>
                 </>
               )
-            ) : (canUploadPdf || pdfUsed < PDF_FREE_LIMIT) ? (
+            ) : pdfUsed < pdfYtLimit ? (
               <>
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-sm font-medium text-gray-400">
                     Your PDF file
                     <span className="ml-2 text-xs text-gray-600">(max {PDF_SIZE_LIMIT_MB} MB)</span>
                   </label>
-                  {!canUploadPdf && (
-                    <span className="text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
-                      {PDF_FREE_LIMIT - pdfUsed} of {PDF_FREE_LIMIT} free uses left
-                    </span>
-                  )}
+                  <span className="text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                    {Math.max(0, pdfYtLimit - pdfUsed)} of {pdfYtLimit} uses left
+                  </span>
                 </div>
                 {/* Drop zone */}
                 <div

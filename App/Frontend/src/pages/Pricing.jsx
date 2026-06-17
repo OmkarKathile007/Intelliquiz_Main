@@ -18,13 +18,30 @@ const CrossIcon = () => (
 );
 
 const FEATURES = [
-  { key: "aiQuizzesPerDay",   label: "AI Quiz generations / day",  format: (v) => (v === Infinity ? "Unlimited" : `${v}/day`) },
-  { key: "pdfUpload",         label: "PDF / Notes upload",         format: (v) => v },
-  { key: "aiExplanations",    label: "AI explanations on wrong answers", format: (v) => v },
-  { key: "spacedRepetition",  label: "Spaced repetition system",   format: (v) => v },
-  { key: "placementPacks",    label: "Placement prep packs (TCS, Infosys, FAANG)", format: (v) => v },
-  { key: "mockTestsPerWeek",  label: "Mock tests / week",          format: (v) => (v === Infinity ? "Unlimited" : `${v}/week`) },
-  { key: "studyGroups",       label: "Private study groups",       format: (v) => v },
+  {
+    key: "aiQuizzesPerDay",
+    label: "AI Quiz generations / day",
+    display: (v) => (v === Infinity ? "Unlimited" : `${v}/day`),
+    active: (v) => typeof v === "number" && v > 0,
+  },
+  {
+    key: "pdfUpload",
+    label: "AI Quiz from PDF / YouTube",
+    display: (v) => `${v} uses`,
+    active: (v) => v > 0,
+  },
+  {
+    key: "mcqTests",
+    label: "MCQ test bank (CS · DSA · OA)",
+    display: () => null,
+    active: (v) => !!v,
+  },
+  {
+    key: "multiplayer",
+    label: "Multiplayer quiz",
+    display: () => null,
+    active: (v) => !!v,
+  },
 ];
 
 const PLAN_CONFIGS = [
@@ -50,7 +67,7 @@ const PLAN_CONFIGS = [
     gradient: "from-purple-900 to-pink-900",
     border: "border-purple-500",
     btnClass: "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white shadow-lg shadow-purple-500/25",
-    tagline: "For placement warriors",
+    tagline: "All features, all unlimited",
   },
 ];
 
@@ -202,16 +219,15 @@ export default function Pricing() {
                 </div>
 
                 <ul className="space-y-3 flex-1 mb-8">
-                  {FEATURES.map(({ key: fKey, label, format }) => {
+                  {FEATURES.map(({ key: fKey, label, display, active: isActive }) => {
                     const val = planData[fKey];
-                    const active = val === true || (typeof val === "number" && val > 0);
+                    const active = isActive(val);
+                    const suffix = display(val);
                     return (
                       <li key={fKey} className="flex items-start gap-2.5 text-sm">
                         {active ? <CheckIcon /> : <CrossIcon />}
                         <span className={active ? "text-gray-200" : "text-gray-500"}>
-                          {typeof val === "boolean"
-                            ? label
-                            : `${label} — ${format(val)}`}
+                          {suffix ? `${label} — ${suffix}` : label}
                         </span>
                       </li>
                     );
